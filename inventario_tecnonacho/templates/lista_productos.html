@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Productos</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #e8f5e9;
+        }
+
+        .btn-primary {
+            background-color: #4caf50;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+
+        .table thead th {
+            cursor: pointer;
+        }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            font-size: 2rem;
+            color: #ddd;
+            cursor: pointer;
+        }
+
+        .star-rating input:checked~label {
+            color: #ffc107;
+        }
+
+        .rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-start;
+        }
+
+        .rating input {
+            display: none;
+        }
+
+        .rating label {
+            font-size: 3rem;
+            color: #ffd700;
+            cursor: pointer;
+        }
+
+        .rating input:checked~label,
+        .rating label:hover,
+        .rating label:hover~label {
+            color: #ffd700;
+        }
+
+        .toggleContainer {
+            --width: 90px;
+            --radius: 30px;
+            position: relative;
+            width: var(--width);
+            height: var(--radius);
+            background: lightgray;
+            border-radius: var(--radius);
+        }
+
+        .toggle {
+            position: absolute;
+            width: 0;
+            height: 0;
+            display: none;
+        }
+
+        .toggle+.switch {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: block;
+            width: var(--radius);
+            height: var(--radius);
+            cursor: pointer;
+            background: red;
+            border-radius: var(--radius);
+            transition: width 1s;
+        }
+
+        .toggle+.switch:before {
+            content: "";
+            position: absolute;
+            width: var(--radius);
+            height: var(--radius);
+            top: 50%;
+            transform: translateY(-50%);
+            background: #320c0c;
+            border-radius: 50%;
+            margin: 0px 2px;
+            left: calc(100% - var(--radius));
+            cursor: pointer;
+        }
+
+        .toggle:checked+.switch {
+            width: var(--width);
+            background: green;
+            /* Cambia el color del switch al encenderse */
+        }
+        .table td {
+    max-width: 200px; /* Máximo ancho de las celdas */
+    overflow: hidden; /* Oculta contenido desbordado */
+    text-overflow: ellipsis; /* Agregar "..." para texto truncado */
+    white-space: nowrap; /* Evitar que el texto ocupe varias líneas */
+}
+
+/* Mostrar tooltip con el contenido completo al pasar el cursor */
+.table td:hover::after {
+    content: attr(data-full-text); /* Mostrar contenido completo */
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8); /* Fondo oscuro */
+    color: #fff; /* Texto blanco */
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    max-width: 300px; /* Ancho máximo del tooltip */
+    white-space: pre-wrap; /* Permitir múltiples líneas en el tooltip */
+    z-index: 1000;
+    left: 0; /* Ajustar posición del tooltip */
+    top: 100%; /* Mostrarlo debajo de la celda */
+    transform: translateY(5px);
+    display: block;
+}
+
+/* Prevenir comportamiento predeterminado si el tooltip no es necesario */
+.table td:hover::after {
+    display: none;
+}
+
+.table td.truncate:hover::after {
+    display: block;
+}
+        
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Lista de Productos</h2>
+            <a href="{% url 'salir' %}" class="btn btn-danger">Salir</a>
+        </div>
+        <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#agregarProductoModal">
+            <i class="fas fa-plus"></i> Agregar Producto
+        </button>
+        <form method="GET" action="{% url 'lista_productos' %}" class="d-flex mb-3">
+            {% csrf_token %}
+            <div class="row w-100 align-items-center">
+                <!-- Campo de búsqueda a la izquierda -->
+                <div class="col-lg-2 col-md-3 col-4">
+                    <input type="text" name="q" class="form-control"
+                        placeholder="Buscar por SKU, descripción o usuario">
+                </div>
+
+                <!-- Espacio central -->
+                <div class="col-lg-8 col-md-6 col-4 text-center">
+                    <!-- Espaciado flexible -->
+                </div>
+
+                <!-- Botón de refrescar a la derecha -->
+                <div class="col-lg-1 col-md-3 col-4">
+                    <button class="btn btn-secondary w-100" type="button"
+                        onclick="location.href='{% url 'lista_productos' %}'">
+                        <i class="fas fa-refresh"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="modal fade" id="agregarProductoModal" tabindex="-1" aria-labelledby="agregarProductoModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="agregarProductoModalLabel">Agregar Producto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="POST" action="{% url 'agregar_producto' %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="sku" class="form-label">SKU</label>
+                                <input type="text" class="form-control" id="sku" name="sku" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <input type="text" class="form-control" id="descripcion" name="descripcion" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="importancia" class="form-label">Nivel de Importancia</label>
+                                <div class="rating">
+                                    <input type="radio" id="estrella5" name="importancia" value="5">
+                                    <label for="estrella5">&#9733;</label>
+                                    <input type="radio" id="estrella4" name="importancia" value="4">
+                                    <label for="estrella4">&#9733;</label>
+                                    <input type="radio" id="estrella3" name="importancia" value="3">
+                                    <label for="estrella3">&#9733;</label>
+                                    <input type="radio" id="estrella2" name="importancia" value="2">
+                                    <label for="estrella2">&#9733;</label>
+                                    <input type="radio" id="estrella1" name="importancia" value="1">
+                                    <label for="estrella1">&#9733;</label>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="editarProductoModal" tabindex="-1" aria-labelledby="editarProductoModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editarProductoModalLabel">Editar Producto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="POST" id="formEditarProducto" action="{% url 'actualizar_producto' 0 %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="id" id="editarId">
+                            <div class="mb-3">
+                                <label for="editarSku" class="form-label">SKU</label>
+                                <input type="text" class="form-control" id="editarSku" name="sku" {% if not user.is_superuser %}readonly{% endif %}>
+
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editarDescripcion" class="form-label">Descripción</label>
+                                <input type="text" class="form-control" id="editarDescripcion" name="descripcion"
+                                    required>
+                            </div>
+                            {% if user.is_superuser %}
+                            <div class="mb-3">
+                                <label for="editarPrecioCompra" class="form-label">Precio de Compra</label>
+                                <input type="number" step="0.01" class="form-control" id="editarPrecioCompra"
+                                    name="precio_compra" required>
+                            </div>
+                            {% endif %}
+                            <div class="mb-3">
+                                <label for="editarImportancia" class="form-label">Nivel de Importancia</label>
+                                <div class="rating">
+                                    {% for i in "54321" %}
+                                    <input type="radio" id="editarEstrella{{ i }}" name="importancia" value="{{ i }}" required>
+                                    <label for="editarEstrella{{ i }}">&#9733;</label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editarProveedor" class="form-label">Proveedor</label>
+                                <input type="text" class="form-control" id="editarProveedor" name="proveedor" 
+                                       {% if not user.is_superuser %}readonly{% endif %} required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editarNota" class="form-label">Nota</label>
+                                <textarea class="form-control" id="editarNota" name="nota" rows="3" 
+                                          {% if not user.is_superuser %}readonly{% endif %} required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="thead-dark">
+                    <tr>
+                        <th onclick="ordenarPor('id')">ID <i class="fas fa-sort"></i></th>
+                        <th onclick="ordenarPor('sku')">SKU <i class="fas fa-sort"></i></th>
+                        <th onclick="ordenarPor('descripcion')">Descripción <i class="fas fa-sort"></i></th>
+                        <th onclick="ordenarPor('user')">Usuario <i class="fas fa-sort"></i></th>
+                        <th onclick="ordenarPor('fecha')">Fecha <i class="fas fa-sort"></i></th>
+                        <th onclick="ordenarPor('hora')">Hora  <i class="fas fa-sort"></i></th>
+                        <th onclick="ordenarPor('precio_compra')">Precio  <i class="fas fa-sort"></i></th>
+                        <th onclick="ordenarPor('importancia')">Importancia <i class="fas fa-sort"></i></th>
+                        <th onclick="ordenarPor('proveedor')">Proveedor <i class="fas fa-sort"></i></th>
+                        <th onclick="ordenarPor('nota')">Nota <i class="fas fa-sort"></i></th>
+                        <th onclick="ordenarPor('listo')">Listo <i class="fas fa-sort"></i></th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr>
+                        <td>{{ producto.id }}</td>
+                        <td>{{ producto.sku }}</td>
+                        <td class="truncate" data-full-text="{{ producto.descripcion }}">{{ producto.descripcion }}</td>
+                        <td>{{ producto.user.username }}</td>
+                        <td>{{ producto.fecha|date:"d/m/Y" }}</td>
+                        <td>{{ producto.hora|time:"h:i A" }}</td>
+                        <td>{{ producto.precio_compra }}</td>
+                        <td>
+                            {% for i in niveles_importancia %}
+                            {% if producto.importancia >= i %}
+                            <i class="fas fa-star"></i>
+                            {% else %}
+                            <i class="far fa-star"></i>
+                            {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td class="truncate" data-full-text="{{ producto.proveedor }}">{{ producto.proveedor }}</td>
+                        <td class="truncate" data-full-text="{{ producto.nota }}">{{ producto.nota }}</td>
+                        <td>
+                            <div class="toggleContainer">
+                                <input type="checkbox" id="switch-{{ producto.id }}" class="toggle" {% if producto.listo %}checked{% endif %} onchange="toggleListo({{ producto.id }})">
+                                <label for="switch-{{ producto.id }}" class="switch"></label>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="#" class="btn btn-success btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#editarProductoModal" data-id="{{ producto.id }}"
+                                data-sku="{{ producto.sku }}" data-descripcion="{{ producto.descripcion }}"
+                                data-precio="{{ producto.precio_compra }}" data-importancia="{{ producto.importancia }}"
+                                data-proveedor="{{ producto.proveedor }}" data-nota="{{ producto.nota }}">
+                                <i class="fa fa-edit"></i>
+                            </a>
+        
+                            {% if user.is_superuser %}
+                            <button class="btn btn-danger btn-sm" onclick="eliminarProducto('{{ producto.id }}')" disabled>
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        {% endif %}
+                        
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="12" class="text-center">No se encontraron productos.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        
+        <div class="pagination">
+            <nav aria-label="Paginación">
+                <ul class="pagination justify-content-center">
+                    {% if productos.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordenar_por %}&ordenar_por={{ request.GET.ordenar_por }}{% endif %}" aria-label="Primera">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ productos.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordenar_por %}&ordenar_por={{ request.GET.ordenar_por }}{% endif %}" aria-label="Anterior">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% for num in productos.paginator.page_range %}
+                        <li class="page-item {% if productos.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordenar_por %}&ordenar_por={{ request.GET.ordenar_por }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                    {% if productos.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ productos.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordenar_por %}&ordenar_por={{ request.GET.ordenar_por }}{% endif %}" aria-label="Siguiente">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ productos.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordenar_por %}&ordenar_por={{ request.GET.ordenar_por }}{% endif %}" aria-label="Última">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        
+
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function ordenarPor(campo) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const ordenActual = urlParams.get('orden') === 'asc' ? 'desc' : 'asc';
+            urlParams.set('orden', ordenActual);
+            urlParams.set('ordenar_por', campo);
+            window.location.search = urlParams.toString();
+        }
+
+        function seleccionarEstrella(valor) {
+            document.getElementById('estrella' + valor).checked = true;
+        }
+
+    </script>
+    <script>
+        const editarProductoModal = document.getElementById('editarProductoModal');
+        editarProductoModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Botón que activó el modal
+            const id = button.getAttribute('data-id');
+            const sku = button.getAttribute('data-sku');
+            const descripcion = button.getAttribute('data-descripcion');
+            const precio = button.getAttribute('data-precio');
+            const importancia = button.getAttribute('data-importancia');
+
+            // Actualizar los campos del formulario con los datos
+            const modalForm = editarProductoModal.querySelector('form');
+            modalForm.action = `/producto/actualizar/${id}/`; // Configura correctamente la URL
+            document.getElementById('editarId').value = id;
+            document.getElementById('editarSku').value = sku;
+            document.getElementById('editarDescripcion').value = descripcion;
+            document.getElementById('editarPrecioCompra').value = precio;
+
+            // Marcar la importancia seleccionada
+            if (importancia) {
+                const importanciaInput = document.getElementById(`editarEstrella${importancia}`);
+                if (importanciaInput) importanciaInput.checked = true;
+            }
+        });
+    </script>
+    <script>
+        function eliminarProducto(productoId) {
+            if (!confirm("¿Estás seguro de que deseas eliminar este producto?")) {
+                return;
+            }
+
+            fetch(`/producto/eliminar/${productoId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}', // Token CSRF para seguridad
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload(); // Recargar la página para reflejar los cambios
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al eliminar el producto:', error);
+                    alert('Ocurrió un error al intentar eliminar el producto.');
+                });
+        }
+    </script>
+    <script>
+        function toggleListo(productoId) {
+            const checkbox = document.getElementById(`switch-${productoId}`);
+            const estadoListo = checkbox.checked;
+
+            fetch(`/producto/toggle_listo/${productoId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(), // Asegúrate de manejar CSRF.
+                },
+                body: JSON.stringify({ listo: estadoListo }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log(`El producto ${productoId} fue actualizado a listo: ${data.listo}`);
+                    } else {
+                        alert('Hubo un error al actualizar el estado.');
+                        checkbox.checked = !estadoListo; // Revertimos el cambio si hay error.
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    checkbox.checked = !estadoListo; // Revertimos el cambio en caso de error.
+                });
+        }
+
+        // Obtener CSRF token de las cookies
+        function getCsrfToken() {
+            const cookieValue = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+            return cookieValue;
+        }
+
+    </script>
+
+
+</body>
+
+</html>
