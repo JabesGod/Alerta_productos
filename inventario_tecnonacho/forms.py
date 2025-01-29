@@ -1,8 +1,9 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from .models import Producto
 
-# Formulario personalizado
+
 class CustomUserCreationForm(UserCreationForm):
     password1 = forms.CharField(
         label="Contraseña",
@@ -18,7 +19,7 @@ class CustomUserCreationForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ("username", "password1", "password2")  # Eliminamos el campo 'email'
+        fields = ("username", "password1", "password2")  
         widgets = {
             "username": forms.TextInput(attrs={"class": "form-control"}),
         }
@@ -30,10 +31,9 @@ class CustomUserCreationForm(UserCreationForm):
         return password1
 
 
-from django import forms
-from .models import Producto
 
 class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
         fields = ['sku', 'descripcion', 'precio_compra', 'importancia']
+

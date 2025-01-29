@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Productos</title>
-    <!-- Bootstrap CSS -->
+ 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome -->
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
         body {
@@ -37,12 +37,12 @@
 
         .star-rating label {
             font-size: 2rem;
-            color: #ddd;
+            color: #fff;
             cursor: pointer;
         }
 
         .star-rating input:checked~label {
-            color: #ffc107;
+            color: black;
         }
 
         .rating {
@@ -57,18 +57,20 @@
 
         .rating label {
             font-size: 3rem;
-            color: #ffd700;
+            color: black;
             cursor: pointer;
+            
         }
 
         .rating input:checked~label,
         .rating label:hover,
         .rating label:hover~label {
             color: #ffd700;
+            
         }
 
         .toggleContainer {
-            --width: 90px;
+            --width: 50px;
             --radius: 30px;
             position: relative;
             width: var(--width);
@@ -94,7 +96,7 @@
             cursor: pointer;
             background: red;
             border-radius: var(--radius);
-            transition: width 1s;
+            transition: width 0.1s;
         }
 
         .toggle+.switch:before {
@@ -104,7 +106,7 @@
             height: var(--radius);
             top: 50%;
             transform: translateY(-50%);
-            background: #320c0c;
+            background: #ffffff;
             border-radius: 50%;
             margin: 0px 2px;
             left: calc(100% - var(--radius));
@@ -113,35 +115,34 @@
 
         .toggle:checked+.switch {
             width: var(--width);
-            background: green;
-            /* Cambia el color del switch al encenderse */
+            background: rgb(0, 196, 0);
         }
         .table td {
-    max-width: 200px; /* Máximo ancho de las celdas */
-    overflow: hidden; /* Oculta contenido desbordado */
-    text-overflow: ellipsis; /* Agregar "..." para texto truncado */
-    white-space: nowrap; /* Evitar que el texto ocupe varias líneas */
+    max-width: 200px; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
+    white-space: nowrap; 
 }
 
-/* Mostrar tooltip con el contenido completo al pasar el cursor */
+
 .table td:hover::after {
-    content: attr(data-full-text); /* Mostrar contenido completo */
+    content: attr(data-full-text); 
     position: absolute;
-    background-color: rgba(0, 0, 0, 0.8); /* Fondo oscuro */
-    color: #fff; /* Texto blanco */
+    background-color: rgba(0, 0, 0, 0.8); 
+    color: #fff;
     padding: 5px 10px;
     border-radius: 5px;
     font-size: 12px;
-    max-width: 300px; /* Ancho máximo del tooltip */
-    white-space: pre-wrap; /* Permitir múltiples líneas en el tooltip */
+    max-width: 300px;
+    white-space: pre-wrap; 
     z-index: 1000;
-    left: 0; /* Ajustar posición del tooltip */
-    top: 100%; /* Mostrarlo debajo de la celda */
+    left: 0; 
+    top: 100%;
     transform: translateY(5px);
     display: block;
 }
 
-/* Prevenir comportamiento predeterminado si el tooltip no es necesario */
+
 .table td:hover::after {
     display: none;
 }
@@ -165,18 +166,12 @@
         <form method="GET" action="{% url 'lista_productos' %}" class="d-flex mb-3">
             {% csrf_token %}
             <div class="row w-100 align-items-center">
-                <!-- Campo de búsqueda a la izquierda -->
                 <div class="col-lg-2 col-md-3 col-4">
                     <input type="text" name="q" class="form-control"
                         placeholder="Buscar por SKU, descripción o usuario">
                 </div>
-
-                <!-- Espacio central -->
                 <div class="col-lg-8 col-md-6 col-4 text-center">
-                    <!-- Espaciado flexible -->
                 </div>
-
-                <!-- Botón de refrescar a la derecha -->
                 <div class="col-lg-1 col-md-3 col-4">
                     <button class="btn btn-secondary w-100" type="button"
                         onclick="location.href='{% url 'lista_productos' %}'">
@@ -194,6 +189,16 @@
                         <h5 class="modal-title" id="agregarProductoModalLabel">Agregar Producto</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
+                    {% if messages %}
+                    <div>
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
                     <div class="modal-body">
                         <form method="POST" action="{% url 'agregar_producto' %}">
                             {% csrf_token %}
@@ -226,6 +231,7 @@
                 </div>
             </div>
         </div>
+        
         <div class="modal fade" id="editarProductoModal" tabindex="-1" aria-labelledby="editarProductoModalLabel"
             aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
@@ -265,17 +271,20 @@
                                     {% endfor %}
                                 </div>
                             </div>
+                            {% if user.is_superuser %}
                             <div class="mb-3">
                                 <label for="editarProveedor" class="form-label">Proveedor</label>
                                 <input type="text" class="form-control" id="editarProveedor" name="proveedor" 
                                        {% if not user.is_superuser %}readonly{% endif %} required>
                             </div>
-                            
+                           
+
                             <div class="mb-3">
                                 <label for="editarNota" class="form-label">Nota</label>
                                 <textarea class="form-control" id="editarNota" name="nota" rows="3" 
                                           {% if not user.is_superuser %}readonly{% endif %} required></textarea>
                             </div>
+                            {% endif %}
                             <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
                         </form>
                     </div>
@@ -296,7 +305,14 @@
                         <th onclick="ordenarPor('importancia')">Importancia <i class="fas fa-sort"></i></th>
                         <th onclick="ordenarPor('proveedor')">Proveedor <i class="fas fa-sort"></i></th>
                         <th onclick="ordenarPor('nota')">Nota <i class="fas fa-sort"></i></th>
-                        <th onclick="ordenarPor('listo')">Listo <i class="fas fa-sort"></i></th>
+                        {% if user.is_superuser %}
+                        <th onclick="ordenarPor('listo')">
+                            <span id="contador-listos" class="badge bg-primary ms-2">{{ total_listos }}</span>
+                            Listo <i class="fas fa-sort"></i>
+                            <!-- Contenedor para el contador -->
+                            
+                        </th>
+                        {% endif %}
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -321,12 +337,15 @@
                         </td>
                         <td class="truncate" data-full-text="{{ producto.proveedor }}">{{ producto.proveedor }}</td>
                         <td class="truncate" data-full-text="{{ producto.nota }}">{{ producto.nota }}</td>
+                        
+                        {% if user.is_superuser %}
                         <td>
                             <div class="toggleContainer">
                                 <input type="checkbox" id="switch-{{ producto.id }}" class="toggle" {% if producto.listo %}checked{% endif %} onchange="toggleListo({{ producto.id }})">
                                 <label for="switch-{{ producto.id }}" class="switch"></label>
                             </div>
                         </td>
+                        {% endif %}
                         <td>
                             <a href="#" class="btn btn-success btn-sm" data-bs-toggle="modal"
                                 data-bs-target="#editarProductoModal" data-id="{{ producto.id }}"
@@ -343,6 +362,7 @@
                         {% endif %}
                         
                         </td>
+                        
                     </tr>
                     {% empty %}
                     <tr>
@@ -412,22 +432,22 @@
     <script>
         const editarProductoModal = document.getElementById('editarProductoModal');
         editarProductoModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget; // Botón que activó el modal
+            const button = event.relatedTarget; 
             const id = button.getAttribute('data-id');
             const sku = button.getAttribute('data-sku');
             const descripcion = button.getAttribute('data-descripcion');
             const precio = button.getAttribute('data-precio');
             const importancia = button.getAttribute('data-importancia');
 
-            // Actualizar los campos del formulario con los datos
+          
             const modalForm = editarProductoModal.querySelector('form');
-            modalForm.action = `/producto/actualizar/${id}/`; // Configura correctamente la URL
+            modalForm.action = `/producto/actualizar/${id}/`; 
             document.getElementById('editarId').value = id;
             document.getElementById('editarSku').value = sku;
             document.getElementById('editarDescripcion').value = descripcion;
             document.getElementById('editarPrecioCompra').value = precio;
 
-            // Marcar la importancia seleccionada
+    
             if (importancia) {
                 const importanciaInput = document.getElementById(`editarEstrella${importancia}`);
                 if (importanciaInput) importanciaInput.checked = true;
@@ -443,7 +463,7 @@
             fetch(`/producto/eliminar/${productoId}/`, {
                 method: 'DELETE',
                 headers: {
-                    'X-CSRFToken': '{{ csrf_token }}', // Token CSRF para seguridad
+                    'X-CSRFToken': '{{ csrf_token }}', 
                     'Content-Type': 'application/json',
                 },
             })
@@ -451,7 +471,7 @@
                 .then(data => {
                     if (data.success) {
                         alert(data.message);
-                        location.reload(); // Recargar la página para reflejar los cambios
+                        location.reload();
                     } else {
                         alert(data.message);
                     }
@@ -463,6 +483,16 @@
         }
     </script>
     <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const messages = document.querySelector('.alert');
+            if (messages) {
+                const modal = new bootstrap.Modal(document.getElementById('agregarProductoModal'));
+                modal.show();
+            }
+        });
+    </script>
+    
+    <script>
         function toggleListo(productoId) {
             const checkbox = document.getElementById(`switch-${productoId}`);
             const estadoListo = checkbox.checked;
@@ -471,7 +501,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCsrfToken(), // Asegúrate de manejar CSRF.
+                    'X-CSRFToken': getCsrfToken(), 
                 },
                 body: JSON.stringify({ listo: estadoListo }),
             })
@@ -481,16 +511,16 @@
                         console.log(`El producto ${productoId} fue actualizado a listo: ${data.listo}`);
                     } else {
                         alert('Hubo un error al actualizar el estado.');
-                        checkbox.checked = !estadoListo; // Revertimos el cambio si hay error.
+                        checkbox.checked = !estadoListo;
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    checkbox.checked = !estadoListo; // Revertimos el cambio en caso de error.
+                    checkbox.checked = !estadoListo; 
                 });
         }
 
-        // Obtener CSRF token de las cookies
+     
         function getCsrfToken() {
             const cookieValue = document.cookie
                 .split('; ')
