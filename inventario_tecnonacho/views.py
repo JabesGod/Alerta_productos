@@ -224,3 +224,36 @@ def eliminar_producto(request, producto_id):
     except Producto.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Producto no encontrado.'}, status=404)
     
+
+import pandas as pd
+import os
+from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+def cargar_sku_desde_excel():
+    """Lee el archivo Excel y devuelve un diccionario con los SKU y descripciones."""
+    ruta_excel = os.path.join(settings.BASE_DIR, 'actualizada.xlsx')
+
+    try:
+        df = pd.read_excel(ruta_excel, dtype={'CódigoInventario': str})
+        df.fillna("", inplace=True)  # Rellenar NaN con cadenas vacías
+        
+        # Convertir en diccionario { SKU: Descripción }
+        return dict(zip(df['CódigoInventario'], df['Descripcion']))
+    except Exception as e:
+        print(f"Error al leer el archivo Excel: {e}")
+        return {}
+
+@csrf_exempt
+def obtener_descripcion_sku(request):
+    """Recibe un SKU y devuelve la descripción desde el archivo Excel."""
+    if request.method == "POST":
+        sku = request.POST.get('sku', '').strip()
+        datos_excel = cargar_sku_desde_excel()
+        
+        descripcion = datos_excel.get(sku, "No encontrado")
+
+        return JsonResponse({"descripcion": descripcion})
+
+    return JsonResponse({"error": "Método no permitido"}, status=400)
