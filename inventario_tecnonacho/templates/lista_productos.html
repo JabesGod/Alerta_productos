@@ -315,10 +315,8 @@
                         <th onclick="ordenarPor('nota')">Nota <i class="fas fa-sort"></i></th>
                         {% if user.is_superuser %}
                         <th onclick="ordenarPor('listo')">
-                            <span id="contador-listos" class="badge bg-primary ms-2">{{ total_listos }}</span>
+                            <span id="contador-listos" class="badge bg-primary ms-2"></span>
                             Listo <i class="fas fa-sort"></i>
-                            <!-- Contenedor para el contador -->
-                            
                         </th>
                         {% endif %}
                         <th>Acciones</th>
