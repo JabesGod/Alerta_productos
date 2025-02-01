@@ -47,7 +47,6 @@ def salir(request):
     logout(request)
     return redirect('iniciar_sesion')
 
-
 @login_required
 def lista_productos(request):
     table_name = 'inventario_tecnonacho_producto'
@@ -57,13 +56,16 @@ def lista_productos(request):
 
     if not table_exists:
         productos = Producto.objects.none()
-        total_listos = 0  # Si la tabla no existe, no hay productos "listos".
+        total_listos = 0
+        total_no_listos = 0
+        importancia_contadores = {str(i): 0 for i in range(1, 6)}  # Inicializa contadores en 0
     else:
         if request.user.is_superuser:
             productos = Producto.objects.all()
         else:
             productos = Producto.objects.filter(user=request.user)
 
+        # Búsqueda
         query = request.GET.get('q', '').strip()
         if query:
             productos = productos.filter(
@@ -74,15 +76,25 @@ def lista_productos(request):
                 Q(proveedor__icontains=query)
             )
 
-        ordenar_por = request.GET.get('ordenar_por', 'id')  
+        # Ordenación
+        ordenar_por = request.GET.get('ordenar_por', 'id')
         orden = request.GET.get('orden', 'asc')
         if orden == 'desc':
             ordenar_por = f'-{ordenar_por}'
         productos = productos.order_by(ordenar_por)
 
-        # Conteo de productos listos
+        # Contadores
         total_listos = productos.filter(listo=True).count()
+        total_no_listos = productos.filter(listo=False).count()
+        importancia_contadores = {
+            "1": productos.filter(importancia=1).count(),
+            "2": productos.filter(importancia=2).count(),
+            "3": productos.filter(importancia=3).count(),
+            "4": productos.filter(importancia=4).count(),
+            "5": productos.filter(importancia=5).count(),
+        }
 
+        # Agregar nuevo producto si es POST
         if request.method == 'POST':
             sku = request.POST.get('sku')
             descripcion = request.POST.get('descripcion')
@@ -110,17 +122,20 @@ def lista_productos(request):
                 )
                 messages.success(request, "Producto agregado exitosamente.")
 
-    paginator = Paginator(productos, 15) 
-    page_number = request.GET.get('page')  
-    productos_paginados = paginator.get_page(page_number)  
+    # Paginación
+    paginator = Paginator(productos, 15)
+    page_number = request.GET.get('page')
+    productos_paginados = paginator.get_page(page_number)
 
     return render(request, 'lista_productos.html', {
-        'productos': productos_paginados,  
+        'productos': productos_paginados,
         'niveles_importancia': range(1, 6),
-        'query': query,  
-        'ordenar_por': ordenar_por.strip('-'), 
+        'query': query,
+        'ordenar_por': ordenar_por.strip('-'),
         'orden': orden,
-        'total_listos': total_listos,  # Se pasa el conteo al contexto
+        'total_listos': total_listos,
+        'total_no_listos': total_no_listos,
+        'importancia_contadores': importancia_contadores,
     })
 
 
@@ -152,9 +167,9 @@ def agregar_producto(request):
         producto_existente = Producto.objects.filter(sku=sku).first()
 
         if producto_existente:
-         
-            if producto_existente.listo:
-        
+            if not producto_existente.listo:
+                messages.error(request, "El SKU ya existe pero no está marcado como listo.")
+            else:
                 Producto.objects.create(
                     sku=sku,
                     descripcion=descripcion,
@@ -162,11 +177,7 @@ def agregar_producto(request):
                     user=user
                 )
                 messages.success(request, "Producto duplicado agregado exitosamente porque `listo` está activo.")
-            else:
-              
-                messages.error(request, "El SKU ya existe pero no está marcado como listo. Por favor, revisa el estado del producto existente.")
         else:
-            
             try:
                 Producto.objects.create(
                     sku=sku,
@@ -176,11 +187,12 @@ def agregar_producto(request):
                 )
                 messages.success(request, "Producto agregado exitosamente.")
             except IntegrityError:
-                messages.error(request, "Error al agregar el producto. Por favor, intenta de nuevo.")
+                messages.error(request, "Error al agregar el producto.")
 
-        return redirect('lista_productos')
+        return redirect('/lista_productos?agregar=1')  # Agrega `?agregar=1` para abrir el modal
 
-    return render(request, 'lista_productos.html')
+    return redirect('lista_productos')
+
 
 
 def validar_sku_unico(value):
