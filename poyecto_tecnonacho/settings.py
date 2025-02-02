@@ -16,6 +16,16 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+import os
+
+# Archivos de medios (imágenes subidas por los usuarios)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Archivos estáticos (CSS, JS, imágenes estáticas)
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 
 # Quick-start development settings - unsuitable for production
@@ -140,6 +150,8 @@ USE_TZ = True
 USE_I18N = True
 
 USE_TZ = True
+
+AUTH_USER_MODEL = 'inventario_tecnonacho.UsuarioPersonalizado'
 
 
 # Static files (CSS, JavaScript, Images)

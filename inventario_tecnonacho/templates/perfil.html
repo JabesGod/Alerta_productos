@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de Usuario</title>
+    <link rel="icon" type="image/png" href="https://i.imgur.com/CiALsHe.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #e8f5e9;
+        }
+        .dashboard-container {
+            max-width: 900px;
+            margin: 50px auto;
+            display: flex;
+        }
+        .sidebar {
+            min-width: 220px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar .nav-link {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .sidebar .nav-link.active {
+            background-color: #4caf50;
+            color: white;
+        }
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-left: 20px;
+        }
+        .perfil-img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+            margin: 0 auto 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Barra lateral -->
+        <div class="sidebar">
+            <h4 class="text-center">Opciones</h4>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <button class="nav-link active w-100 text-start" id="perfil-tab-btn" data-bs-toggle="pill" data-bs-target="#perfil-tab-pane">Perfil</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link w-100 text-start" id="contraseña-tab-btn" data-bs-toggle="pill" data-bs-target="#contraseña-tab-pane">Cambiar Contraseña</button>
+                </li>
+                <li class="nav-item mt-3">
+                    <a href="{% url 'lista_productos' %}" class="nav-link text-danger w-100 text-start">🔙 Volver a Lista de Productos</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Contenido dinámico -->
+        <div class="content">
+            <h2 class="text-center mb-4">Perfil de Usuario</h2>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="tab-content">
+                <!-- Sección Perfil -->
+                <div class="tab-pane fade show active" id="perfil-tab-pane">
+                    <div class="text-center">
+                        {% if user.foto_perfil %}
+                            <img src="{{ user.foto_perfil.url }}" alt="Foto de perfil" class="perfil-img">
+                        {% else %}
+                            <img src="https://i.imgur.com/6MBKArX.png" alt="Sin foto" class="perfil-img">
+                        {% endif %}
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Actualizar foto de perfil</label>
+                            {{ form_foto.foto_perfil }}
+                        </div>
+                        <button type="submit" name="actualizar_foto" class="btn btn-success w-100 mb-2">Actualizar Foto</button>
+                        {% if user.foto_perfil %}
+                            <button type="submit" name="eliminar_foto" class="btn btn-danger w-100">Eliminar Foto</button>
+                        {% endif %}
+                    </form>
+                </div>
+
+                <!-- Sección Cambiar Contraseña -->
+                <div class="tab-pane fade" id="contraseña-tab-pane">
+                    <h4 class="text-center">Cambiar Contraseña</h4>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña actual</label>
+                            {{ form_contraseña.old_password }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nueva Contraseña</label>
+                            {{ form_contraseña.new_password1 }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirmar Nueva Contraseña</label>
+                            {{ form_contraseña.new_password2 }}
+                        </div>
+                        <button type="submit" name="cambiar_contraseña" class="btn btn-success w-100">Cambiar Contraseña</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

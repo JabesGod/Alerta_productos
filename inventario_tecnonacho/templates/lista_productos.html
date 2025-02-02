@@ -160,21 +160,37 @@
             <h2>Lista de Productos</h2>
 
 
-<div class="container mt-5">
-    <div class="d-flex justify-content-end position-relative">
-        <!-- Botón de usuario -->
-        <button class="border-0 p-0" id="userBtn" style="font-size: 2rem; background: none; cursor: pointer;">
-            <i class="fa-regular fa-circle-user"></i>
-        </button>
-
-        <!-- Menú que se muestra/oculta -->
-        <ul class="list-group position-absolute end-0 mt-2 d-none" id="userMenu" style="min-width: 100px;">
-            <li class="list-group-item p-1 text-center">
-                <a class="text-danger text-decoration-none small" href="{% url 'salir' %}">Salir</a>
-            </li>
-        </ul>
-    </div>
-</div>
+            <div class="container mt-5">
+                <div class="d-flex justify-content-end position-relative">
+                    <!-- Botón de usuario con imagen en lugar del ícono -->
+                    <button class="border-0 p-0" id="userBtn" style="background: none; cursor: pointer;">
+                        {% if user.foto_perfil %}
+                            <img src="{{ user.foto_perfil.url }}" alt="Foto de perfil" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+                        {% else %}
+                            <i class="fa-regular fa-circle-user" style="font-size: 2rem;"></i>
+                        {% endif %}
+                    </button>
+            
+                    <!-- Menú que se muestra/oculta -->
+                    <ul class="list-group position-absolute end-0 mt-2 d-none" id="userMenu" style="min-width: 120px;">
+                        <li class="list-group-item p-1 text-center">
+                            <a class="text-success text-decoration-none small" href="{% url 'perfil_usuario' %}">Perfil</a>
+                        </li>
+                        <li class="list-group-item p-1 text-center">
+                            <a class="text-danger text-decoration-none small" href="{% url 'salir' %}">Salir</a>
+                        </li>
+                        {% if user.is_superuser %}
+                        <li class="list-group-item p-1 text-center">
+                            <a class="text-primary text-decoration-none small" href="{% url 'lista_usuarios' %}">Gestionar Usuarios</a>
+                        </li>
+                        {% endif %}
+                                               
+                        
+                    </ul>
+                </div>
+            </div>
+            
+            
         </div>
         
         <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#agregarProductoModal">

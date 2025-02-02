@@ -16,6 +16,100 @@ from django.http import HttpResponseForbidden
 from django.core.paginator import Paginator
 from django.core.exceptions import ValidationError
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib.auth import update_session_auth_hash, get_user_model
+from django.contrib import messages
+from .forms import CambiarContraseñaForm, FotoPerfilForm
+
+User = get_user_model()
+
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import SetPasswordForm
+from django.contrib import messages
+
+User = get_user_model()
+
+# Función para verificar si el usuario es administrador
+def es_admin(user):
+    return user.is_superuser
+
+@login_required
+@user_passes_test(es_admin)
+def lista_usuarios(request):
+    usuarios = User.objects.all()
+    return render(request, "lista_usuarios.html", {"usuarios": usuarios})
+
+@login_required
+@user_passes_test(es_admin)
+def eliminar_usuario(request, user_id):
+    usuario = get_object_or_404(User, id=user_id)
+    if usuario.is_superuser:
+        messages.error(request, "No puedes eliminar a otro administrador.")
+    else:
+        usuario.delete()
+        messages.success(request, "Usuario eliminado con éxito.")
+    return redirect("lista_usuarios")
+
+@login_required
+@user_passes_test(es_admin)
+def cambiar_contraseña_usuario(request, user_id):
+    usuario = get_object_or_404(User, id=user_id)
+
+    if request.method == "POST":
+        form = SetPasswordForm(usuario, request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Contraseña cambiada con éxito.")
+            return redirect("lista_usuarios")
+    else:
+        form = SetPasswordForm(usuario)
+
+    return render(request, "cambiar_contraseña_usuario.html", {"form": form, "usuario": usuario})
+
+@login_required
+def perfil_usuario(request):
+    if request.method == "POST":
+        if "cambiar_contraseña" in request.POST:
+            form_contraseña = CambiarContraseñaForm(user=request.user, data=request.POST)
+            if form_contraseña.is_valid():
+                form_contraseña.save()
+                update_session_auth_hash(request, request.user)
+                messages.success(request, "Contraseña cambiada con éxito.")
+                return redirect("perfil_usuario")
+            else:
+                messages.error(request, "Error al cambiar la contraseña.")
+
+        elif "actualizar_foto" in request.POST:
+            form_foto = FotoPerfilForm(request.POST, request.FILES, instance=request.user)
+            if form_foto.is_valid():
+                form_foto.save()
+                messages.success(request, "Foto de perfil actualizada con éxito.")
+                return redirect("perfil_usuario")
+            else:
+                messages.error(request, "Error al actualizar la foto de perfil.")
+
+        elif "eliminar_foto" in request.POST:
+            request.user.foto_perfil.delete(save=True)
+            messages.success(request, "Foto de perfil eliminada con éxito.")
+            return redirect("perfil_usuario")
+
+    else:
+        form_contraseña = CambiarContraseñaForm(user=request.user)
+        form_foto = FotoPerfilForm(instance=request.user)
+
+    return render(request, "perfil.html", {
+        "form_contraseña": form_contraseña,
+        "form_foto": form_foto,
+    })
+
+
+
+
+
+
 def iniciar_sesion(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
