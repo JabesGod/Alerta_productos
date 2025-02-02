@@ -1,38 +1,21 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate
-from django.contrib.auth.forms import AuthenticationForm
-from .models import Producto
-from django.contrib.auth.decorators import login_required
-from django.db import IntegrityError
-from django.contrib.auth import logout
-from .forms import CustomUserCreationForm
-from django.db.models import Q
-from django.http import JsonResponse
+from django.contrib.auth import login, authenticate, logout, update_session_auth_hash, get_user_model
+from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-import json
-from django.db import connection
-from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden
 from django.core.paginator import Paginator
 from django.core.exceptions import ValidationError
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.contrib.auth import update_session_auth_hash, get_user_model
-from django.contrib import messages
-from .forms import CambiarContraseñaForm, FotoPerfilForm
-
+from django.views.decorators.csrf import csrf_exempt
+from django.db import IntegrityError, connection
+from django.db.models import Q
+import json
+from .models import Producto
+from .forms import CustomUserCreationForm, CambiarContraseñaForm, FotoPerfilForm
 User = get_user_model()
 
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import SetPasswordForm
-from django.contrib import messages
 
-User = get_user_model()
 
-# Función para verificar si el usuario es administrador
 def es_admin(user):
     return user.is_superuser
 
