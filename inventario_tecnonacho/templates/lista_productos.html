@@ -158,7 +158,23 @@
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Lista de Productos</h2>
-            <a href="{% url 'salir' %}" class="btn btn-danger">Salir</a>
+
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-end position-relative">
+        <!-- Botón de usuario -->
+        <button class="border-0 p-0" id="userBtn" style="font-size: 2rem; background: none; cursor: pointer;">
+            <i class="fa-regular fa-circle-user"></i>
+        </button>
+
+        <!-- Menú que se muestra/oculta -->
+        <ul class="list-group position-absolute end-0 mt-2 d-none" id="userMenu" style="min-width: 100px;">
+            <li class="list-group-item p-1 text-center">
+                <a class="text-danger text-decoration-none small" href="{% url 'salir' %}">Salir</a>
+            </li>
+        </ul>
+    </div>
+</div>
         </div>
         
         <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#agregarProductoModal">
@@ -498,7 +514,22 @@
             }
         });
     </script>
+    <script>
+        document.getElementById("userBtn").addEventListener("click", function () {
+            let menu = document.getElementById("userMenu");
+            menu.classList.toggle("d-none"); // Alterna la visibilidad
+        });
     
+        // Ocultar el menú si se hace clic fuera de él
+        document.addEventListener("click", function (event) {
+            let btn = document.getElementById("userBtn");
+            let menu = document.getElementById("userMenu");
+    
+            if (!btn.contains(event.target) && !menu.contains(event.target)) {
+                menu.classList.add("d-none");
+            }
+        });
+    </script>
     <script>
         function toggleListo(productoId) {
             const checkbox = document.getElementById(`switch-${productoId}`);
