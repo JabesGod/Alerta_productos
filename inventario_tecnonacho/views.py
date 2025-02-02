@@ -278,26 +278,34 @@ def validar_sku_unico(value):
         raise ValidationError("El SKU ya existe y no está marcado como listo.")
 
 
+from django.contrib import messages
+from django.http import HttpResponseForbidden
+
 @login_required
 def actualizar_producto(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+
     if request.method == 'POST':
-        producto = get_object_or_404(Producto, id=producto_id)
-
-        if request.user.is_superuser:
-            producto.sku = request.POST.get('sku')
-            producto.proveedor = request.POST.get('proveedor')
-            producto.nota = request.POST.get('nota')  
+        # Usuarios normales solo pueden modificar ciertos campos
+        if not request.user.is_superuser:
+            producto.sku = request.POST.get('sku', producto.sku)
+            producto.descripcion = request.POST.get('descripcion', producto.descripcion)
+            producto.importancia = request.POST.get('importancia', producto.importancia)
         else:
-        
-            if request.POST.get('sku') != producto.sku or request.POST.get('proveedor') or request.POST.get('nota'):
-                return HttpResponseForbidden("No tienes permiso para modificar estos campos.")
+            # Admin puede modificar todo
+            producto.sku = request.POST.get('sku', producto.sku)
+            producto.descripcion = request.POST.get('descripcion', producto.descripcion)
+            producto.importancia = request.POST.get('importancia', producto.importancia)
+            producto.precio_compra = request.POST.get('precio_compra', producto.precio_compra)
+            producto.proveedor = request.POST.get('proveedor', producto.proveedor)
+            producto.nota = request.POST.get('nota', producto.nota)
 
-        producto.descripcion = request.POST.get('descripcion')
-        producto.precio_compra = request.POST.get('precio_compra')
-        producto.importancia = request.POST.get('importancia')
+        try:
+            producto.save()
+            messages.success(request, "Producto actualizado correctamente.")
+        except Exception as e:
+            messages.error(request, f"Error al actualizar el producto: {str(e)}")
 
-   
-        producto.save()
         return redirect('lista_productos')
 
     return redirect('lista_productos')

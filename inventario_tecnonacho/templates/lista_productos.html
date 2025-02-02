@@ -301,10 +301,14 @@
                                 <input type="text" class="form-control" id="editarDescripcion" name="descripcion" required>
                             </div>
         
+                            {% if request.user.is_superuser %}
                             <div class="mb-3">
                                 <label for="editarPrecioCompra" class="form-label">Precio de Compra</label>
                                 <input type="number" step="0.01" class="form-control" id="editarPrecioCompra" name="precio_compra" required>
                             </div>
+                            {% else %}
+                            <input type="hidden" name="precio_compra" id="editarPrecioCompra">
+                            {% endif %}
         
                             <div class="mb-3">
                                 <label for="editarImportancia" class="form-label">Nivel de Importancia</label>
@@ -316,15 +320,23 @@
                                 </div>
                             </div>
         
+                            {% if request.user.is_superuser %}
                             <div class="mb-3">
                                 <label for="editarProveedor" class="form-label">Proveedor</label>
                                 <input type="text" class="form-control" id="editarProveedor" name="proveedor" required>
                             </div>
+                            {% else %}
+                            <input type="hidden" name="proveedor" id="editarProveedor">
+                            {% endif %}
         
+                            {% if request.user.is_superuser %}
                             <div class="mb-3">
                                 <label for="editarNota" class="form-label">Nota</label>
                                 <textarea class="form-control" id="editarNota" name="nota" rows="3" required></textarea>
                             </div>
+                            {% else %}
+                            <input type="hidden" name="nota" id="editarNota">
+                            {% endif %}
         
                             <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
                         </form>
@@ -332,7 +344,6 @@
                 </div>
             </div>
         </div>
-        
         
 
         <div class="table-responsive">
