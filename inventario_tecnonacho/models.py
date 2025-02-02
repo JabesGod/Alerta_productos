@@ -21,7 +21,7 @@ class Producto(models.Model):
         return f"{self.sku} - {self.descripcion}"
 
     def clean(self):
-        """Valida que el SKU sea único si `listo` es False."""
+        """Valida que el SKU sea único si listo es False."""
         if Producto.objects.filter(sku=self.sku).exclude(pk=self.pk).exists():
             producto_existente = Producto.objects.get(sku=self.sku)
             if not producto_existente.listo:

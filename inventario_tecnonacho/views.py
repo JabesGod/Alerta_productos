@@ -302,6 +302,7 @@ def actualizar_producto(request, producto_id):
 
     return redirect('lista_productos')
 
+
 @login_required
 def eliminar_producto(request, producto_id):
     if not request.user.is_superuser:
