@@ -3,7 +3,7 @@ from django.contrib.auth import login, authenticate, logout, update_session_auth
 from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.core.exceptions import ValidationError
 from django.views.decorators.csrf import csrf_exempt
@@ -137,7 +137,7 @@ def lista_productos(request):
         total_no_listos = 0
         importancia_contadores = {str(i): 0 for i in range(1, 6)}  # Inicializa contadores en 0
     else:
-        if request.user.is_superuser:
+        if request.user:
             productos = Producto.objects.all()
         else:
             productos = Producto.objects.filter(user=request.user)
@@ -154,7 +154,7 @@ def lista_productos(request):
             )
 
         # Ordenación
-        ordenar_por = request.GET.get('ordenar_por', 'id')
+        ordenar_por = request.GET.get('ordenar_por', '-id')
         orden = request.GET.get('orden', 'asc')
         if orden == 'desc':
             ordenar_por = f'-{ordenar_por}'
@@ -278,8 +278,7 @@ def validar_sku_unico(value):
         raise ValidationError("El SKU ya existe y no está marcado como listo.")
 
 
-from django.contrib import messages
-from django.http import HttpResponseForbidden
+
 
 @login_required
 def actualizar_producto(request, producto_id):
