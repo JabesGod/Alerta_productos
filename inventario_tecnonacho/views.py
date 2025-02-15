@@ -216,29 +216,35 @@ def lista_productos(request):
     })
 
 
-
-
-
 @csrf_exempt
 def toggle_listo(request, pk):
     if request.method == 'POST':
         producto = get_object_or_404(Producto, pk=pk)
-        data = json.loads(request.body)
 
+        # Solo permitir cambios si el usuario es superuser
+        if not request.user.is_superuser:
+            return JsonResponse({'success': False, 'error': 'No tienes permisos para cambiar este estado'}, status=403)
+
+        data = json.loads(request.body)
         nuevo_estado = data.get('listo', False)
         producto.listo = nuevo_estado
         producto.save()
 
         return JsonResponse({'success': True, 'listo': producto.listo})
+    
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
     
+
+
 @login_required
 def agregar_producto(request):
     if request.method == 'POST':
         sku = request.POST.get('sku')
         descripcion = request.POST.get('descripcion')
         importancia = request.POST.get('importancia')
+        cantidad = request.POST.get('cantidad')
+        categoria = request.POST.get('categoria')
         user = request.user
 
         producto_existente = Producto.objects.filter(sku=sku).first()
@@ -251,6 +257,8 @@ def agregar_producto(request):
                     sku=sku,
                     descripcion=descripcion,
                     importancia=importancia,
+                    cantidad=cantidad,
+                    categoria=categoria,
                     user=user
                 )
                 messages.success(request, "Producto duplicado agregado exitosamente porque `listo` está activo.")
@@ -260,15 +268,18 @@ def agregar_producto(request):
                     sku=sku,
                     descripcion=descripcion,
                     importancia=importancia,
+                    cantidad=cantidad,
+                    categoria=categoria,
                     user=user
                 )
                 messages.success(request, "Producto agregado exitosamente.")
             except IntegrityError:
                 messages.error(request, "Error al agregar el producto.")
 
-        return redirect('/lista_productos?agregar=1')  # Agrega `?agregar=1` para abrir el modal
+        return redirect('/lista_productos?agregar=1')  # Recarga la página y mantiene el modal abierto
 
     return redirect('lista_productos')
+
 
 
 
@@ -280,24 +291,35 @@ def validar_sku_unico(value):
 
 
 
+from django.http import HttpResponseForbidden
+
 @login_required
 def actualizar_producto(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id)
 
+    # Solo el usuario dueño del producto o un superusuario pueden editar
+    if request.user != producto.user and not request.user.is_superuser:
+        messages.error(request, "No tienes permisos para editar este producto.")
+        return redirect('lista_productos')
+
     if request.method == 'POST':
-        # Usuarios normales solo pueden modificar ciertos campos
+        # Si NO es superusuario, solo puede modificar ciertos campos
         if not request.user.is_superuser:
             producto.sku = request.POST.get('sku', producto.sku)
             producto.descripcion = request.POST.get('descripcion', producto.descripcion)
             producto.importancia = request.POST.get('importancia', producto.importancia)
+            producto.cantidad = request.POST.get('cantidad', producto.cantidad)
+            producto.categoria = request.POST.get('categoria', producto.categoria)
         else:
-            # Admin puede modificar todo
+            # Si es superusuario, puede modificar todo
             producto.sku = request.POST.get('sku', producto.sku)
             producto.descripcion = request.POST.get('descripcion', producto.descripcion)
             producto.importancia = request.POST.get('importancia', producto.importancia)
             producto.precio_compra = request.POST.get('precio_compra', producto.precio_compra)
             producto.proveedor = request.POST.get('proveedor', producto.proveedor)
             producto.nota = request.POST.get('nota', producto.nota)
+            producto.cantidad = request.POST.get('cantidad', producto.cantidad)
+            producto.categoria = request.POST.get('categoria', producto.categoria)
 
         try:
             producto.save()
@@ -308,6 +330,7 @@ def actualizar_producto(request, producto_id):
         return redirect('lista_productos')
 
     return redirect('lista_productos')
+
 
 
 @login_required

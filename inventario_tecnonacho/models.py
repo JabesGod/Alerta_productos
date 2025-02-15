@@ -2,9 +2,25 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.conf import settings
 
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.conf import settings
+
 class Producto(models.Model):
-    sku = models.CharField(max_length=100)
+    CATEGORIAS = [
+        ('faltantes', 'Faltantes'),
+        ('demasiadas_existencias', 'Demasiadas existencias'),
+        ('bajo_pedido', 'Bajo pedido'),
+    ]
+
+    sku = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField()
+    cantidad = models.IntegerField(default=0)  # Ahora es un número entero
+    categoria = models.CharField(
+        max_length=25, 
+        choices=CATEGORIAS, 
+        default='faltantes'
+    )
     fecha = models.DateField(auto_now_add=True)
     hora = models.TimeField(auto_now_add=True)
     user = models.ForeignKey(
@@ -14,18 +30,22 @@ class Producto(models.Model):
     precio_compra = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
     importancia = models.IntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
     listo = models.BooleanField(default=False)
-    proveedor = models.TextField( null=True, blank=True)
+    proveedor = models.TextField(null=True, blank=True)
     nota = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.sku} - {self.descripcion}"
+        return f"{self.sku} - {self.descripcion} - {self.categoria}"
 
     def clean(self):
-        """Valida que el SKU sea único si `listo` es False."""
+        """Valida que el SKU sea único si `listo` es False y valida la categoría."""
         if Producto.objects.filter(sku=self.sku).exclude(pk=self.pk).exists():
             producto_existente = Producto.objects.get(sku=self.sku)
             if not producto_existente.listo:
                 raise ValidationError(f"El SKU '{self.sku}' ya existe y no está marcado como listo.")
+
+        if self.categoria not in dict(self.CATEGORIAS).keys():
+            raise ValidationError("Categoría no válida. Usa una de las opciones predefinidas.")
+
 
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models

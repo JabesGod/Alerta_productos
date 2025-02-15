@@ -57,7 +57,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Usuario</th>
-                        <th>Email</th>
+                      
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -74,8 +74,7 @@
                                 {% endif %}
                                 {{ usuario.username }}
                             </div>
-                        </td>
-                        <td>{{ usuario.email }}</td>
+                        </td>                     
                         <td>
                             {% if not usuario.is_superuser %}
                                 <div class="d-flex flex-wrap gap-2 justify-content-center">
