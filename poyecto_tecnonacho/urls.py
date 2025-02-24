@@ -17,6 +17,10 @@ urlpatterns = [
     path("usuarios/", views.lista_usuarios, name="lista_usuarios"),
     path("usuarios/eliminar/<int:user_id>/", views.eliminar_usuario, name="eliminar_usuario"),
     path("usuarios/cambiar_contraseña/<int:user_id>/", views.cambiar_contraseña_usuario, name="cambiar_contraseña_usuario"),
+    path('notificaciones/obtener/', views.obtener_notificaciones, name='obtener_notificaciones'),
+    path('notificaciones/marcar_leidas/', views.marcar_notificaciones_leidas, name='marcar_notificaciones_leidas'),
+    path('notificaciones/eliminar/<int:notificacion_id>/', views.eliminar_notificacion, name='eliminar_notificacion'),
+    path('notificaciones/eliminar_todas/', views.eliminar_todas_notificaciones, name='eliminar_todas_notificaciones'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -124,8 +124,10 @@ def salir(request):
     logout(request)
     return redirect('iniciar_sesion')
 
+
 @login_required
 def lista_productos(request):
+
     table_name = 'inventario_tecnonacho_producto'
     with connection.cursor() as cursor:
         cursor.execute("SHOW TABLES LIKE %s", [table_name])
@@ -135,14 +137,30 @@ def lista_productos(request):
         productos = Producto.objects.none()
         total_listos = 0
         total_no_listos = 0
-        importancia_contadores = {str(i): 0 for i in range(1, 6)}  # Inicializa contadores en 0
+        importancia_contadores = {str(i): 0 for i in range(1, 6)}
     else:
-        if request.user:
+        # 🔹 Obtener todos los productos según el usuario
+        if request.user.is_superuser:
             productos = Producto.objects.all()
         else:
             productos = Producto.objects.filter(user=request.user)
 
-        # Búsqueda
+        # 🔹 Filtro de categoría
+        categoria_filtro = request.GET.get('categoria', '').strip()
+        if categoria_filtro:
+            productos = productos.filter(categoria=categoria_filtro)
+
+        # 🔹 Filtro de importancia (nuevo filtro)
+        importancia_filtro = request.GET.get('importancia')
+        if importancia_filtro:
+            productos = productos.filter(importancia=int(importancia_filtro))
+
+        # 🔹 Filtro de estado "listo" (nuevo filtro)
+        listo_filtro = request.GET.get('listo')
+        if listo_filtro is not None:
+            productos = productos.filter(listo=(listo_filtro.lower() == 'true'))
+
+        # 🔹 Filtro de búsqueda
         query = request.GET.get('q', '').strip()
         if query:
             productos = productos.filter(
@@ -150,35 +168,31 @@ def lista_productos(request):
                 Q(descripcion__icontains=query) |
                 Q(user__username__icontains=query) |
                 Q(precio_compra__icontains=query) |
-                Q(proveedor__icontains=query)
+                Q(proveedor__icontains=query) |
+                Q(nota__icontains=query)
             )
 
-        # Ordenación
+        # 🔹 Ordenación
         ordenar_por = request.GET.get('ordenar_por', '-id')
         orden = request.GET.get('orden', 'asc')
         if orden == 'desc':
             ordenar_por = f'-{ordenar_por}'
         productos = productos.order_by(ordenar_por)
 
-        # Contadores
-        total_listos = productos.filter(listo=True).count()
-        total_no_listos = productos.filter(listo=False).count()
+        # 🔹 Contadores para los filtros
+        total_listos = Producto.objects.filter(listo=True).count()
+        total_no_listos = Producto.objects.filter(listo=False).count()
         importancia_contadores = {
-            "1": productos.filter(importancia=1).count(),
-            "2": productos.filter(importancia=2).count(),
-            "3": productos.filter(importancia=3).count(),
-            "4": productos.filter(importancia=4).count(),
-            "5": productos.filter(importancia=5).count(),
+            str(i): Producto.objects.filter(importancia=i).count() for i in range(1, 6)
         }
 
-        # Agregar nuevo producto si es POST
+        # 🔹 Manejo de creación de productos
         if request.method == 'POST':
             sku = request.POST.get('sku')
             descripcion = request.POST.get('descripcion')
             importancia = request.POST.get('importancia')
 
             producto_existente = Producto.objects.filter(sku=sku).first()
-
             if producto_existente:
                 if not producto_existente.listo:
                     messages.error(request, "El SKU ya existe y no está marcado como listo. No se puede agregar.")
@@ -199,22 +213,29 @@ def lista_productos(request):
                 )
                 messages.success(request, "Producto agregado exitosamente.")
 
-    # Paginación
+    # 🔹 Paginación (después de los filtros)
     paginator = Paginator(productos, 15)
     page_number = request.GET.get('page')
     productos_paginados = paginator.get_page(page_number)
+
+    # 🔹 Obtener todos los parámetros de filtro actuales para mantenerlos en la paginación
+    query_params = request.GET.copy()
+    if 'page' in query_params:
+        del query_params['page']
+    filtro_url = query_params.urlencode()  # Convierte los parámetros en una cadena para la URL
 
     return render(request, 'lista_productos.html', {
         'productos': productos_paginados,
         'niveles_importancia': range(1, 6),
         'query': query,
+        'categoria_filtro': categoria_filtro,
         'ordenar_por': ordenar_por.strip('-'),
         'orden': orden,
         'total_listos': total_listos,
         'total_no_listos': total_no_listos,
         'importancia_contadores': importancia_contadores,
+        'filtro_url': filtro_url,  # 🔹 Pasamos los filtros a la plantilla
     })
-
 
 @csrf_exempt
 def toggle_listo(request, pk):
@@ -227,15 +248,24 @@ def toggle_listo(request, pk):
 
         data = json.loads(request.body)
         nuevo_estado = data.get('listo', False)
+        
         producto.listo = nuevo_estado
+
+        # 🔹 Cambiar la categoría automáticamente
+        if producto.listo:
+            producto.categoria = 'realizados'  # ✅ Si se marca como listo, pasa a "Realizados"
+        else:
+            producto.categoria = 'faltantes'  # ✅ Si se desmarca, pasa a "Faltantes" (color rojo)
+
         producto.save()
 
-        return JsonResponse({'success': True, 'listo': producto.listo})
+        return JsonResponse({'success': True, 'listo': producto.listo, 'categoria': producto.get_categoria_display()})
     
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
-    
-
+from .models import Producto, Notificacion
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 @login_required
 def agregar_producto(request):
@@ -249,45 +279,108 @@ def agregar_producto(request):
 
         producto_existente = Producto.objects.filter(sku=sku).first()
 
-        if producto_existente:
-            if not producto_existente.listo:
-                messages.error(request, "El SKU ya existe pero no está marcado como listo.")
-            else:
-                Producto.objects.create(
-                    sku=sku,
-                    descripcion=descripcion,
-                    importancia=importancia,
-                    cantidad=cantidad,
-                    categoria=categoria,
-                    user=user
-                )
-                messages.success(request, "Producto duplicado agregado exitosamente porque `listo` está activo.")
+        if producto_existente and not producto_existente.listo:
+            messages.error(request, "El SKU ya existe pero no está marcado como listo.")
         else:
-            try:
-                Producto.objects.create(
-                    sku=sku,
-                    descripcion=descripcion,
-                    importancia=importancia,
-                    cantidad=cantidad,
-                    categoria=categoria,
-                    user=user
-                )
-                messages.success(request, "Producto agregado exitosamente.")
-            except IntegrityError:
-                messages.error(request, "Error al agregar el producto.")
+            nuevo_producto = Producto.objects.create(
+                sku=sku,
+                descripcion=descripcion,
+                importancia=importancia,
+                cantidad=cantidad,
+                categoria=categoria,
+                user=user
+            )
+            messages.success(request, "Producto agregado exitosamente.")
 
-        return redirect('/lista_productos?agregar=1')  # Recarga la página y mantiene el modal abierto
+            # 🔔 Crear notificación para administradores
+            admins = User.objects.filter(is_superuser=True)
+            for admin in admins:
+                Notificacion.objects.create(
+                    usuario=admin,
+                    mensaje=f"Nuevo producto agregado: {nuevo_producto.descripcion} (SKU: {nuevo_producto.sku})"
+                )
+
+        return redirect('lista_productos')
 
     return redirect('lista_productos')
 
 
 
+from django.utils.timezone import localtime
 
-def validar_sku_unico(value):
-    producto_existente = Producto.objects.filter(sku=value).first()
-    if producto_existente and not producto_existente.listo:
-        raise ValidationError("El SKU ya existe y no está marcado como listo.")
+@login_required
+def obtener_notificaciones(request):
+    notificaciones = Notificacion.objects.filter(usuario=request.user).order_by('-fecha_creacion')[:5]
 
+    data = {
+        "notificaciones": [
+            {
+                "id": n.id,
+                "mensaje": n.mensaje,
+                "leido": n.leido,
+                "fecha": localtime(n.fecha_creacion).strftime("%d/%m/%Y %I:%M %p"),
+                "imagen_usuario": n.usuario.foto_perfil.url if n.usuario.foto_perfil else "/static/images/default.png",  # ✅ Ahora es la imagen del usuario que creó la notificación
+            } for n in notificaciones
+        ],
+        "total_no_leidas": Notificacion.objects.filter(usuario=request.user, leido=False).count()
+    }
+    return JsonResponse(data)
+
+
+
+
+@login_required
+def marcar_notificaciones_leidas(request):
+    Notificacion.objects.filter(usuario=request.user, leido=False).update(leido=True)
+    return JsonResponse({"success": True})
+
+
+@login_required
+def eliminar_notificacion(request, notificacion_id):
+    try:
+        notificacion = Notificacion.objects.get(id=notificacion_id, usuario=request.user)
+        notificacion.delete()
+        return JsonResponse({"success": True})
+    except Notificacion.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Notificación no encontrada."}, status=404)
+
+
+@login_required
+def eliminar_todas_notificaciones(request):
+
+    Notificacion.objects.filter(usuario=request.user).delete()
+    return JsonResponse({"success": True})
+
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+from django.core.exceptions import ObjectDoesNotExist
+
+@receiver(pre_save, sender=Producto)
+def notificar_cambio_producto(sender, instance, **kwargs):
+    """ Crea una notificación cuando `listo` cambia a True o si se edita cualquier otro campo importante """
+    try:
+        producto_viejo = Producto.objects.get(pk=instance.pk)  # Obtener versión anterior del producto
+    except Producto.DoesNotExist:
+        return  # Si no existe, es un nuevo producto y no hacemos nada
+
+    # Si `listo` cambió de False a True, notificar al usuario propietario del producto
+    if not producto_viejo.listo and instance.listo:
+        mensaje = f"Tu producto '{instance.descripcion}' ha sido marcado como 'Realizado'."
+        Notificacion.objects.create(
+            usuario=instance.user,  # Usuario que recibe la notificación
+            mensaje=mensaje  # 🔹 Eliminamos usuario_origen
+        )
+
+    # Detectar cambios en otros campos importantes
+    campos_importantes = ["categoria", "nota", "cantidad", "precio_compra", "importancia", "proveedor"]
+    cambios = [campo for campo in campos_importantes if getattr(producto_viejo, campo, None) != getattr(instance, campo, None)]
+
+    if cambios:
+        mensaje = f"Tu producto '{instance.descripcion}' ha sido editado. Campos modificados: {', '.join(cambios)}."
+        Notificacion.objects.create(
+            usuario=instance.user,  # Usuario que recibe la notificación
+            mensaje=mensaje  # 🔹 Eliminamos usuario_origen
+        )
 
 
 

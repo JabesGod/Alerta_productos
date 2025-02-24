@@ -11,6 +11,8 @@ class Producto(models.Model):
         ('faltantes', 'Faltantes'),
         ('demasiadas_existencias', 'Demasiadas existencias'),
         ('bajo_pedido', 'Bajo pedido'),
+        ('realizados', 'Realizados'),
+        ('agotados', 'Agotados con el proveedor')
     ]
 
     sku = models.CharField(max_length=100, unique=True)
@@ -66,3 +68,17 @@ class UsuarioPersonalizado(AbstractUser):
 
     def __str__(self):
         return self.username
+    
+
+    
+from django.db import models
+from django.conf import settings
+
+class Notificacion(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    mensaje = models.TextField()
+    leido = models.BooleanField(default=False)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.usuario.username} - {self.mensaje}"

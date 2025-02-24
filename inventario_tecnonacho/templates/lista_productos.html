@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 
@@ -59,14 +60,14 @@
             font-size: 3rem;
             color: black;
             cursor: pointer;
-            
+
         }
 
         .rating input:checked~label,
         .rating label:hover,
         .rating label:hover~label {
             color: #ffd700;
-            
+
         }
 
         .toggleContainer {
@@ -117,635 +118,985 @@
             width: var(--width);
             background: rgb(0, 196, 0);
         }
+
         .table td {
-    max-width: 200px; 
-    overflow: hidden; 
-    text-overflow: ellipsis;
-    white-space: nowrap; 
-}
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .bg-realizados {
+            background-color: rgb(0, 196, 0) !important;
+            /* Verde personalizado */
+            color: white !important;
+            /* Texto en blanco para contraste */
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .bg-agot{
+            background-color: rgb(255, 166, 0);
+        }
+
+        /* 🟢 Asegura que la tabla no se expanda más allá del container */
+        .container {
+            max-width: 1200px;
+            /* Puedes ajustarlo según tu diseño */
+            margin: auto;
+        }
+        
+        
+        /* 🟡 Evita que las celdas se expandan demasiado en móviles */
+        .table-responsive {
+            max-width: 100%;
+            overflow-x: auto;
+            padding: 10px;
+        }
+
+        /* 🔵 Ajusta las columnas de la tabla */
+        .table th,
+        .table td {
+            white-space: nowrap;
+            /* Evita que el texto se rompa */
+            text-align: center;
+        }
+
+        /* 🟣 Reduce el tamaño de la fuente en móviles */
+        @media (max-width: 768px) {
+
+            .table th,
+            .table td {
+                font-size: 14px;
+                padding: 8px;
+            }
+        }
+
+        .table td:hover::after {
+            content: attr(data-full-text);
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            max-width: 300px;
+            white-space: pre-wrap;
+            z-index: 1000;
+            left: 0;
+            top: 100%;
+            transform: translateY(5px);
+            display: block;
+        }
 
 
-.table td:hover::after {
-    content: attr(data-full-text); 
-    position: absolute;
-    background-color: rgba(0, 0, 0, 0.8); 
-    color: #fff;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 12px;
-    max-width: 300px;
-    white-space: pre-wrap; 
-    z-index: 1000;
-    left: 0; 
-    top: 100%;
-    transform: translateY(5px);
-    display: block;
-}
+        .table td:hover::after {
+            display: none;
+        }
 
-
-.table td:hover::after {
-    display: none;
-}
-
-.table td.truncate:hover::after {
-    display: block;
-}
+        .table td.truncate:hover::after {
+            display: block;
+        }
         
     </style>
 </head>
 
 <body>
+
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Lista de Productos</h2>
 
+            <!-- 🔹 Contenedor de Notificaciones y Usuario -->
+            <div class="d-flex justify-content-end align-items-center position-relative">
 
-            <div class="container mt-5">
-                <div class="d-flex justify-content-end position-relative">
-                    <!-- Botón de usuario con imagen en lugar del ícono -->
+                <!-- 📷 Botón de usuario con imagen -->
+                <div class="position-relative">
                     <button class="border-0 p-0" id="userBtn" style="background: none; cursor: pointer;">
                         {% if user.foto_perfil %}
-                            <img src="{{ user.foto_perfil.url }}" alt="Foto de perfil" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+                        <img src="{{ user.foto_perfil.url }}" alt="Foto de perfil" class="rounded-circle"
+                            style="width: 50px; height: 50px; object-fit: cover;">
                         {% else %}
-                            <i class="fa-regular fa-circle-user" style="font-size: 2rem;"></i>
+                        <i class="fa-regular fa-circle-user" style="font-size: 2rem;"></i>
                         {% endif %}
                     </button>
-            
-                    <!-- Menú que se muestra/oculta -->
-                    <ul class="list-group position-absolute end-0 mt-2 d-none" id="userMenu" style="min-width: 120px;">
-                        <li class="list-group-item p-1 text-center">
-                            <a class="text-success text-decoration-none small" href="{% url 'perfil_usuario' %}">Perfil</a>
+
+                    <!-- 🔹 Menú desplegable de usuario -->
+                    <ul class="list-group position-absolute mt-2 d-none" id="userMenu" style="min-width: 160px; background: white; border-radius: 8px; 
+                        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); right: 0; z-index: 1050;">
+                        <li class="list-group-item p-2 text-center">
+                            <a class="text-success text-decoration-none small" href="{% url 'perfil_usuario' %}">👤
+                                Perfil</a>
                         </li>
-                        <li class="list-group-item p-1 text-center">
-                            <a class="text-danger text-decoration-none small" href="{% url 'salir' %}">Salir</a>
+                        <li class="list-group-item p-2 text-center">
+                            <a class="text-danger text-decoration-none small" href="{% url 'salir' %}">🚪 Cerrar
+                                Sesión</a>
                         </li>
                         {% if user.is_superuser %}
-                        <li class="list-group-item p-1 text-center">
-                            <a class="text-primary text-decoration-none small" href="{% url 'lista_usuarios' %}">Gestionar Usuarios</a>
+                        <li class="list-group-item p-2 text-center">
+                            <a class="text-primary text-decoration-none small" href="{% url 'lista_usuarios' %}">⚙️
+                                Gestionar Usuarios</a>
                         </li>
                         {% endif %}
-                                               
-                        
                     </ul>
                 </div>
+
+                <div class="position-relative ms-3 ">
+                    <button id="notificacionesBtn" class="btn btn-outline-ligth position-relative border-0">
+                        <i class="fas fa-bell fa-2x "></i>
+                        <span id="contadorNotificaciones" class="badge bg-danger position-absolute top-0 start-100 translate-middle " style="display:none;">0</span>
+                    </button>
+                
+                    <!-- 🔹 Menú desplegable de Notificaciones -->
+                    <div id="notificacionesDropdown" class="dropdown-menu p-3 shadow"
+                        style="width: 320px; display: none; position: absolute; right: 0; z-index: 1050;">
+                        <h6 class="dropdown-header text-center fw-bold text-primary">🔔 Notificaciones Recientes</h6>
+                        
+                        <div id="listaNotificaciones" class="px-2">
+                            <p class="text-muted text-center">📭 No tienes nuevas notificaciones</p>
+                        </div>
+                
+                        <div class="text-center mt-3">
+                            <button id="marcarLeidasBtn" class="btn btn-sm btn-success w-100">✅ Marcar todas como leídas</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            
         </div>
-        
+
+        <!-- 🔹 Botón para agregar productos -->
         <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#agregarProductoModal">
             <i class="fas fa-plus"></i> Agregar Producto
         </button>
+
         {% if request.user.is_superuser %}
-        <div class="d-flex justify-content-between text-center mb-3">
-            <span class="badge bg-success p-2"><i class="fas fa-check-circle"></i> Listos: {{ total_listos }}</span>
-            <span class="badge bg-danger p-2"><i class="fas fa-times-circle"></i> No listos: {{ total_no_listos }}</span>
-            <span class="badge bg-warning text-dark p-2"><i class="fas fa-star"></i> 5 :  {{ importancia_contadores.5 }}</span>
-            <span class="badge bg-warning text-dark p-2"><i class="fas fa-star"></i> 4 : {{ importancia_contadores.4 }}</span>
-            <span class="badge bg-warning text-dark p-2"><i class="fas fa-star"></i> 3 : {{ importancia_contadores.3 }}</span>
-            <span class="badge bg-secondary p-2"><i class="fas fa-star"></i> 2 : {{ importancia_contadores.2 }}</span>
-            <span class="badge bg-dark p-2"><i class="fas fa-star"></i> 1 : {{ importancia_contadores.1 }}</span>
+        <div class="container-fluid">
+            <div class="row text-center mb-3">
+                <div class="col-6 col-md-4 col-lg-2 mb-2">
+                    <button class="badge bg-success p-2 w-100 border-0" onclick="aplicarFiltro('listo', 'true')">
+                        <i class="fas fa-check-circle"></i> Listos: {{ total_listos }}
+                    </button>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2 mb-2">
+                    <button class="badge bg-danger p-2 w-100 border-0" onclick="aplicarFiltro('listo', 'false')">
+                        <i class="fas fa-times-circle"></i> No listos: {{ total_no_listos }}
+                    </button>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2 mb-2">
+                    <button class="badge bg-warning text-dark p-2 w-100 border-0" onclick="aplicarFiltro('importancia', '5')">
+                        <i class="fas fa-star"></i> 5: {{ importancia_contadores.5 }}
+                    </button>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2 mb-2">
+                    <button class="badge bg-warning text-dark p-2 w-100 border-0" onclick="aplicarFiltro('importancia', '4')">
+                        <i class="fas fa-star"></i> 4: {{ importancia_contadores.4 }}
+                    </button>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2 mb-2">
+                    <button class="badge bg-warning text-dark p-2 w-100 border-0" onclick="aplicarFiltro('importancia', '3')">
+                        <i class="fas fa-star"></i> 3: {{ importancia_contadores.3 }}
+                    </button>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2 mb-2">
+                    <button class="badge bg-warning text-dark p-2 w-100 border-0" onclick="aplicarFiltro('importancia', '2')">
+                        <i class="fas fa-star"></i> 2: {{ importancia_contadores.2 }}
+                    </button>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2 mb-2">
+                    <button class="badge bg-warning text-dark p-2 w-100 border-0" onclick="aplicarFiltro('importancia', '1')">
+                        <i class="fas fa-star"></i> 1: {{ importancia_contadores.1 }}
+                    </button>
+                </div>
+            </div>
         </div>
         {% endif %}
         
+        
+        <div class="container mt-4">
+            <form method="GET" action="{% url 'lista_productos' %}" class="row g-2 d-flex mb-3 align-items-center">
 
-        <form method="GET" action="{% url 'lista_productos' %}" class="d-flex mb-3">
-            {% csrf_token %}
-            <div class="row w-100 align-items-center">
-                <div class="col-lg-2 col-md-3 col-4">
-                    <input type="text" name="q" class="form-control"
-                        placeholder="Buscar por SKU, descripción o usuario">
+                <!-- 🔹 Input de búsqueda (responsivo: ocupa 3 columnas en pantallas grandes) -->
+                <div class="col-lg-2 col-md-4 col-12">
+                    <input type="text" name="q" class="form-control" placeholder="Buscar por SKU, descripción o usuario"
+                        value="{{ request.GET.q }}">
                 </div>
-                <div class="col-lg-8 col-md-6 col-4 text-center">
+
+                <!-- 🔹 Filtro por categoría (Solo visible para administradores) -->
+                {% if user.is_superuser %}
+                <div class="col-lg-2 col-md-4 col-12">
+                    <select name="categoria" class="form-control" onchange="this.form.submit()">
+                        <option value="">Todas las categorías</option>
+                        <option value="agotados" {% if categoria_filtro == "agotados" %}selected{% endif %}>Agotados</option>
+                        <option value="faltantes" {% if categoria_filtro == "faltantes" %}selected{% endif %}>Faltantes</option>
+                        <option value="demasiadas_existencias" {% if categoria_filtro == "demasiadas_existencias" %}selected{% endif %}>Demasiadas existencias</option>
+                        <option value="bajo_pedido" {% if categoria_filtro == "bajo_pedido" %}selected{% endif %}>Bajo pedido</option>
+                        <option value="realizados" {% if categoria_filtro == "realizados" %}selected{% endif %}>Realizados</option>
+                    </select>
                 </div>
-                <div class="col-lg-1 col-md-3 col-4">
-                    <button class="btn btn-secondary w-100" type="button"
+                
+                {% endif %}
+
+                <!-- 🔹 Botón de Reset (Responsivo, ocupa 1 columna) -->
+                <div class="col-lg-2 col-md-3 col-12">
+                    <button class="btn btn-secondary w-10" type="button"
                         onclick="location.href='{% url 'lista_productos' %}'">
                         <i class="fas fa-refresh"></i>
                     </button>
                 </div>
-            </div>
-        </form>
 
-    <!-- Modal para Agregar Producto -->
-<div class="modal fade" id="agregarProductoModal" tabindex="-1" aria-labelledby="agregarProductoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="agregarProductoModalLabel">Agregar Producto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
+            </form>
+        </div>
 
-            {% if messages %}
-                <div>
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
 
-            <div class="modal-body">
-                <form id="formAgregarProducto" method="POST" action="{% url 'agregar_producto' %}">
-                    {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label for="sku" class="form-label">SKU</label>
-                        <input type="text" class="form-control" id="sku" name="sku" required>
-                    </div>
 
-                    <div class="mb-3">
-                        <label for="descripcion" class="form-label">Descripción</label>
-                        <input type="text" class="form-control" id="descripcion" name="descripcion" required>
-                    </div>
+        <div class="container mt-4">
+            <div class="table-responsive" style="max-width: 100%; overflow-x: auto;">
+                <table class="table table-striped table-hover text-center align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th onclick="ordenarPor('id')">ID <i class="fas fa-sort"></i></th>
+                            <th onclick="ordenarPor('sku')">SKU <i class="fas fa-sort"></i></th>
+                            <th onclick="ordenarPor('descripcion')">Descripción <i class="fas fa-sort"></i></th>
+                            <th onclick="ordenarPor('user')">Usuario <i class="fas fa-sort"></i></th>
+                            <th onclick="ordenarPor('fecha')">Fecha <i class="fas fa-sort"></i></th>
+                            <th onclick="ordenarPor('hora')">Hora <i class="fas fa-sort"></i></th>
+                            <th onclick="ordenarPor('cantidad')">Cantidad <i class="fas fa-sort"></i></th>
+                            <th onclick="ordenarPor('categoria')">Categoría <i class="fas fa-sort"></i></th>
+                            <th onclick="ordenarPor('importancia')">Importancia <i class="fas fa-sort"></i></th>
+                            {% if user.is_superuser %}
+                            <th onclick="ordenarPor('precio_compra')">Precio <i class="fas fa-sort"></i></th>
+                            <th onclick="ordenarPor('proveedor')">Proveedor <i class="fas fa-sort"></i></th>
+                            {% endif %}
 
-                    <div class="mb-3">
-                        <label for="cantidad" class="form-label">Cantidad</label>
-                        <input type="number" class="form-control" id="cantidad" name="cantidad" required>
-                    </div>
+                            <th onclick="ordenarPor('nota')">Nota <i class="fas fa-sort"></i></th>
+                            <th onclick="ordenarPor('listo')">Listo <i class="fas fa-sort"></i></th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos %}
+                        <tr>
+                            <td>{{ producto.id }}</td>
+                            <td>{{ producto.sku }}</td>
+                            <td class="truncate" data-full-text="{{ producto.descripcion }}">{{ producto.descripcion }}
+                            </td>
+                            <td>{{ producto.user.username }}</td>
+                            <td>{{ producto.fecha|date:"d/m/Y" }}</td>
+                            <td>{{ producto.hora|time:"h:i A" }}</td>
+                            <td>{{ producto.cantidad }}</td>
+                            <td id="categoria-{{ producto.id }}">
+                                <span class="badge 
+                                    {% if producto.categoria == 'faltantes' %} bg-danger
+                                    {% elif producto.categoria == 'demasiadas_existencias' %} bg-warning text-dark
+                                    {% elif producto.categoria == 'agotados' %} bg-agot text-dark
+                                    {% elif producto.categoria == 'bajo_pedido' %} bg-info text-dark
+                                    {% elif producto.categoria == 'realizados' %} bg-realizados  <!-- Clase personalizada -->
+                                    {% else %} bg-secondary
+                                    {% endif %}">
+                                    {{ producto.get_categoria_display }}
+                                </span>
+                            </td>
 
-                    <div class="mb-3">
-                        <label for="categoria" class="form-label">Categoría</label>
-                        <select class="form-control" id="categoria" name="categoria" required>
-                            <option value="faltantes">Faltantes</option>
-                            <option value="demasiadas_existencias">Demasiadas existencias</option>
-                            <option value="bajo_pedido">Bajo pedido</option>
-                        </select>
-                    </div>
+                            <td>
+                                {% for i in niveles_importancia %}
+                                {% if producto.importancia >= i %}
+                                <i class="fas fa-star"></i>
+                                {% else %}
+                                <i class="far fa-star"></i>
+                                {% endif %}
+                                {% endfor %}
+                            </td>
+                            {% if user.is_superuser %}
+                            <td>{{ producto.precio_compra }}</td>
+                            <td class="truncate" data-bs-toggle="tooltip" data-bs-placement="top"
+                                data-full-text="{{ producto.proveedor }}">
+                                {{ producto.proveedor }}
+                            </td>
+                            {% endif %}
 
-                    <div class="mb-3">
-                        <label for="importancia" class="form-label">Nivel de Importancia</label>
-                        <div class="rating">
-                            <input type="radio" id="estrella5" name="importancia" value="5">
-                            <label for="estrella5">&#9733;</label>
-                            <input type="radio" id="estrella4" name="importancia" value="4">
-                            <label for="estrella4">&#9733;</label>
-                            <input type="radio" id="estrella3" name="importancia" value="3">
-                            <label for="estrella3">&#9733;</label>
-                            <input type="radio" id="estrella2" name="importancia" value="2">
-                            <label for="estrella2">&#9733;</label>
-                            <input type="radio" id="estrella1" name="importancia" value="1">
-                            <label for="estrella1">&#9733;</label>
-                        </div>
-                    </div>
+                            <td class="truncate" data-bs-toggle="tooltip" data-bs-placement="top"
+                                data-full-text="{{ producto.nota }}">
+                                {{ producto.nota }}
+                            </td>
+                            <td>
+                                <div class="toggleContainer">
+                                    <input type="checkbox" id="switch-{{ producto.id }}" class="toggle" 
+                                        {% if producto.listo %}checked{% endif %}
+                                        {% if not user.is_superuser %}disabled{% endif %}
+                                        onchange="toggleListo({{ producto.id }})">
+                                    <label for="switch-{{ producto.id }}" class="switch"></label>
+                                </div>
+                            </td>
+                            
 
-                    <button type="submit" class="btn btn-success w-100">Guardar</button>
-                </form>
+                            <td>
+                                {% if producto.user == request.user or user.is_superuser %}
+                                <a href="#" class="btn btn-success btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#editarProductoModal"
+                                    data-id="{{ producto.id }}"
+                                    data-sku="{{ producto.sku }}"
+                                    data-descripcion="{{ producto.descripcion }}"
+                                    data-cantidad="{{ producto.cantidad }}"
+                                    data-categoria="{{ producto.categoria }}"
+                                    data-nota="{{ producto.nota }}"
+                                    data-importancia="{{ producto.importancia }}"
+                                    {% if user.is_superuser %}
+                                        data-precio="{{ producto.precio_compra }}"
+                                        data-proveedor="{{ producto.proveedor }}"
+                                    {% endif %}>
+                                    <i class="fa fa-edit"></i>
+                                </a>
+                            {% endif %}
+                            
+
+                                {% if user.is_superuser %}
+                                <button class="btn btn-danger btn-sm" onclick="eliminarProducto('{{ producto.id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{% if user.is_superuser %}13{% else %}9{% endif %}" class="text-center">No se
+                                encontraron productos.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
-</div>
-
-        
-        <!-- Modal para Editar Producto -->
-<div class="modal fade" id="editarProductoModal" tabindex="-1" aria-labelledby="editarProductoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editarProductoModalLabel">Editar Producto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-
-            <div class="modal-body">
-                <form method="POST" id="formEditarProducto">
-                    {% csrf_token %}
-                    <input type="hidden" name="id" id="editarId">
-
-                    <div class="mb-3">
-                        <label for="editarSku" class="form-label">SKU</label>
-                        <input type="text" class="form-control" id="editarSku" name="sku" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="editarDescripcion" class="form-label">Descripción</label>
-                        <input type="text" class="form-control" id="editarDescripcion" name="descripcion" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="editarCantidad" class="form-label">Cantidad</label>
-                        <input type="number" class="form-control" id="editarCantidad" name="cantidad" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="editarCategoria" class="form-label">Categoría</label>
-                        <select class="form-control" id="editarCategoria" name="categoria" required>
-                            <option value="faltantes">Faltantes</option>
-                            <option value="demasiadas_existencias">Demasiadas existencias</option>
-                            <option value="bajo_pedido">Bajo pedido</option>
-                        </select>
-                    </div>
-
-                    {% if request.user.is_superuser %}
-                    <div class="mb-3">
-                        <label for="editarPrecioCompra" class="form-label">Precio de Compra</label>
-                        <input type="number" step="0.01" class="form-control" id="editarPrecioCompra" name="precio_compra" required>
-                    </div>
-                    {% else %}
-                    <input type="hidden" name="precio_compra" id="editarPrecioCompra">
-                    {% endif %}
-
-                    <div class="mb-3">
-                        <label for="editarImportancia" class="form-label">Nivel de Importancia</label>
-                        <div class="rating">
-                            {% for i in "54321" %}
-                            <input type="radio" id="editarEstrella{{ i }}" name="importancia" value="{{ i }}" required>
-                            <label for="editarEstrella{{ i }}">&#9733;</label>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    {% if request.user.is_superuser %}
-                    <div class="mb-3">
-                        <label for="editarProveedor" class="form-label">Proveedor</label>
-                        <input type="text" class="form-control" id="editarProveedor" name="proveedor" required>
-                    </div>
-                    {% else %}
-                    <input type="hidden" name="proveedor" id="editarProveedor">
-                    {% endif %}
-
-                    {% if request.user.is_superuser %}
-                    <div class="mb-3">
-                        <label for="editarNota" class="form-label">Nota</label>
-                        <textarea class="form-control" id="editarNota" name="nota" rows="3" required></textarea>
-                    </div>
-                    {% else %}
-                    <input type="hidden" name="nota" id="editarNota">
-                    {% endif %}
-
-                    <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-        
-
-<div class="table-responsive">
-    <table class="table table-striped table-hover">
-        <thead class="thead-dark">
-            <tr>
-                <th onclick="ordenarPor('id')">ID <i class="fas fa-sort"></i></th>
-                <th onclick="ordenarPor('sku')">SKU <i class="fas fa-sort"></i></th>
-                <th onclick="ordenarPor('descripcion')">Descripción <i class="fas fa-sort"></i></th>
-                <th onclick="ordenarPor('user')">Usuario <i class="fas fa-sort"></i></th>
-                <th onclick="ordenarPor('fecha')">Fecha <i class="fas fa-sort"></i></th>
-                <th onclick="ordenarPor('hora')">Hora <i class="fas fa-sort"></i></th>
-                {% if user.is_superuser %}
-                <th onclick="ordenarPor('cantidad')">Cantidad <i class="fas fa-sort"></i></th>
-                <th onclick="ordenarPor('categoria')">Categoría <i class="fas fa-sort"></i></th>
-                {% endif %}
-                <th onclick="ordenarPor('importancia')">Importancia <i class="fas fa-sort"></i></th>
-                {% if user.is_superuser %}
-                <th onclick="ordenarPor('precio_compra')">Precio <i class="fas fa-sort"></i></th>
-                <th onclick="ordenarPor('proveedor')">Proveedor <i class="fas fa-sort"></i></th>
-                {% endif %}
-
-                <th onclick="ordenarPor('nota')">Nota <i class="fas fa-sort"></i></th>
-                <th onclick="ordenarPor('listo')">Listo <i class="fas fa-sort"></i></th> <!-- 🔹 Ahora visible para todos -->
-
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for producto in productos %}
-            <tr>
-                <td>{{ producto.id }}</td>
-                <td>{{ producto.sku }}</td>
-                <td class="truncate" data-full-text="{{ producto.descripcion }}">{{ producto.descripcion }}</td>
-                <td>{{ producto.user.username }}</td>
-                <td>{{ producto.fecha|date:"d/m/Y" }}</td>
-                <td>{{ producto.hora|time:"h:i A" }}</td>
-                {% if user.is_superuser %}
-                <td>{{ producto.cantidad }}</td>
-                <td>
-                    {% if producto.categoria == "faltantes" %}
-                        <span class="badge bg-danger">Faltantes</span>
-                    {% elif producto.categoria == "demasiadas_existencias" %}
-                        <span class="badge bg-warning text-dark">Demasiadas Existencias</span>
-                    {% elif producto.categoria == "bajo_pedido" %}
-                        <span class="badge bg-info text-dark">Bajo Pedido</span>
-                    {% else %}
-                        <span class="badge bg-secondary">Sin Categoría</span>
-                    {% endif %}
-                </td>
-                {% endif %}
-                <td>
-                    {% for i in niveles_importancia %}
-                    {% if producto.importancia >= i %}
-                    <i class="fas fa-star"></i>
-                    {% else %}
-                    <i class="far fa-star"></i>
-                    {% endif %}
-                    {% endfor %}
-                </td>
-                {% if user.is_superuser %}
-                <td>{{ producto.precio_compra }}</td>
-                <td class="truncate" data-bs-toggle="tooltip" data-bs-placement="top" data-full-text="{{ producto.proveedor }}">
-                    {{ producto.proveedor }}
-                </td>
-                {% endif %}
-
-                <td class="truncate" data-bs-toggle="tooltip" data-bs-placement="top" data-full-text="{{ producto.nota }}">
-                    {{ producto.nota }}
-                </td>
-
-                <td>
-                    <div class="toggleContainer">
-                        <input type="checkbox" id="switch-{{ producto.id }}" class="toggle"
-                            {% if producto.listo %}checked{% endif %}
-                            {% if not user.is_superuser %}disabled{% endif %}
-                            onchange="toggleListo({{ producto.id }})">
-                        <label for="switch-{{ producto.id }}" class="switch"></label> <!-- 🔹 Se asegura de que no haya texto extra -->
-                    </div>
-                </td>
-                
-                
-                <td>
-                    {% if producto.user == request.user or user.is_superuser %}
-                    <a href="#" class="btn btn-success btn-sm" data-bs-toggle="modal"
-                        data-bs-target="#editarProductoModal" data-id="{{ producto.id }}"
-                        data-sku="{{ producto.sku }}" data-descripcion="{{ producto.descripcion }}"
-                        data-cantidad="{{ producto.cantidad }}" data-categoria="{{ producto.categoria }}"
-                        {% if user.is_superuser %}
-                        data-precio="{{ producto.precio_compra }}" data-proveedor="{{ producto.proveedor }}"
-                        {% endif %}
-                        data-nota="{{ producto.nota }}" data-importancia="{{ producto.importancia }}">
-                        <i class="fa fa-edit"></i>
-                    </a>
-                    {% endif %}
-
-                    {% if user.is_superuser %}
-                    <button class="btn btn-danger btn-sm" onclick="eliminarProducto('{{ producto.id }}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                    {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="{% if user.is_superuser %}13{% else %}9{% endif %}" class="text-center">No se encontraron productos.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
 
 
-        
-        
+
+
+
+
         
         <div class="pagination">
             <nav aria-label="Paginación">
                 <ul class="pagination justify-content-center">
                     {% if productos.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordenar_por %}&ordenar_por={{ request.GET.ordenar_por }}{% endif %}" aria-label="Primera">
-                                <span aria-hidden="true">&laquo;&laquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ productos.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordenar_por %}&ordenar_por={{ request.GET.ordenar_por }}{% endif %}" aria-label="Anterior">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if filtro_url %}&{{ filtro_url }}{% endif %}" aria-label="Primera">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ productos.previous_page_number }}{% if filtro_url %}&{{ filtro_url }}{% endif %}" aria-label="Anterior">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
                     {% endif %}
+        
                     {% for num in productos.paginator.page_range %}
-                        <li class="page-item {% if productos.number == num %}active{% endif %}">
-                            <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordenar_por %}&ordenar_por={{ request.GET.ordenar_por }}{% endif %}">
-                                {{ num }}
-                            </a>
-                        </li>
+                    <li class="page-item {% if productos.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}{% if filtro_url %}&{{ filtro_url }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
                     {% endfor %}
+        
                     {% if productos.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ productos.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordenar_por %}&ordenar_por={{ request.GET.ordenar_por }}{% endif %}" aria-label="Siguiente">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ productos.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordenar_por %}&ordenar_por={{ request.GET.ordenar_por }}{% endif %}" aria-label="Última">
-                                <span aria-hidden="true">&raquo;&raquo;</span>
-                            </a>
-                        </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ productos.next_page_number }}{% if filtro_url %}&{{ filtro_url }}{% endif %}" aria-label="Siguiente">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ productos.paginator.num_pages }}{% if filtro_url %}&{{ filtro_url }}{% endif %}" aria-label="Última">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
                     {% endif %}
                 </ul>
             </nav>
         </div>
         
 
+
     </div>
-    <script>
-        function toggleListo(productoId) {
-            const checkbox = document.getElementById(`switch-${productoId}`);
-    
-            // Si el usuario no es superuser, evitar el cambio
-            if (checkbox.disabled) {
-                return;
-            }
-    
-            const estadoListo = checkbox.checked;
-    
-            fetch(`/producto/toggle_listo/${productoId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCsrfToken(), 
-                },
-                body: JSON.stringify({ listo: estadoListo }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    alert('Hubo un error al actualizar el estado.');
-                    checkbox.checked = !estadoListo;  // Revierte el cambio si hay error
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                checkbox.checked = !estadoListo;  // Revierte el cambio si hay error
-            });
-        }
-    
-        function getCsrfToken() {
-            const cookieValue = document.cookie
-                .split('; ')
-                .find(row => row.startsWith('csrftoken='))
-                ?.split('=')[1];
-            return cookieValue;
-        }
-    </script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function ordenarPor(campo) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const ordenActual = urlParams.get('orden') === 'asc' ? 'desc' : 'asc';
-            urlParams.set('orden', ordenActual);
-            urlParams.set('ordenar_por', campo);
-            window.location.search = urlParams.toString();
-        }
 
-        function seleccionarEstrella(valor) {
-            document.getElementById('estrella' + valor).checked = true;
-        }
 
-    </script>
-    <script>
-        const editarProductoModal = document.getElementById('editarProductoModal');
-        editarProductoModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget; 
-            const id = button.getAttribute('data-id');
-            const sku = button.getAttribute('data-sku');
-            const descripcion = button.getAttribute('data-descripcion');
-            const precio = button.getAttribute('data-precio');
-            const importancia = button.getAttribute('data-importancia');
 
-          
-            const modalForm = editarProductoModal.querySelector('form');
-            modalForm.action = `/producto/actualizar/${id}/`; 
-            document.getElementById('editarId').value = id;
-            document.getElementById('editarSku').value = sku;
-            document.getElementById('editarDescripcion').value = descripcion;
-            document.getElementById('editarPrecioCompra').value = precio;
+    <!-- Modal para Agregar Producto -->
+    <div class="modal fade" id="agregarProductoModal" tabindex="-1" aria-labelledby="agregarProductoModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="agregarProductoModalLabel">Agregar Producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
 
-    
-            if (importancia) {
-                const importanciaInput = document.getElementById(`editarEstrella${importancia}`);
-                if (importanciaInput) importanciaInput.checked = true;
-            }
-        });
-    </script>
-    
-    <script>
-        function eliminarProducto(productoId) {
-            if (!confirm("¿Estás seguro de que deseas eliminar este producto?")) {
-                return;
-            }
+                {% if messages %}
+                <div>
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
 
-            fetch(`/producto/eliminar/${productoId}/`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}', 
-                    'Content-Type': 'application/json',
-                },
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        location.reload();
-                    } else {
-                        alert(data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error al eliminar el producto:', error);
-                    alert('Ocurrió un error al intentar eliminar el producto.');
-                });
-        }
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const messages = document.querySelector('.alert');
-            if (messages) {
-                const modal = new bootstrap.Modal(document.getElementById('agregarProductoModal'));
-                modal.show();
-            }
-        });
-    </script>
-    <script>
-        document.getElementById("userBtn").addEventListener("click", function () {
-            let menu = document.getElementById("userMenu");
-            menu.classList.toggle("d-none"); // Alterna la visibilidad
-        });
-    
-        // Ocultar el menú si se hace clic fuera de él
-        document.addEventListener("click", function (event) {
-            let btn = document.getElementById("userBtn");
-            let menu = document.getElementById("userMenu");
-    
-            if (!btn.contains(event.target) && !menu.contains(event.target)) {
-                menu.classList.add("d-none");
-            }
-        });
-    </script>
-    <script>
-        function toggleListo(productoId) {
-            const checkbox = document.getElementById(`switch-${productoId}`);
-            const estadoListo = checkbox.checked;
+                <div class="modal-body">
+                    <form id="formAgregarProducto" method="POST" action="{% url 'agregar_producto' %}">
+                        {% csrf_token %}
 
-            fetch(`/producto/toggle_listo/${productoId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCsrfToken(), 
-                },
-                body: JSON.stringify({ listo: estadoListo }),
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        console.log(`El producto ${productoId} fue actualizado a listo: ${data.listo}`);
-                    } else {
-                        alert('Hubo un error al actualizar el estado.');
-                        checkbox.checked = !estadoListo;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    checkbox.checked = !estadoListo; 
-                });
-        }
+                        <div class="mb-3">
+                            <label for="sku" class="form-label">SKU</label>
+                            <input type="text" class="form-control" id="sku" name="sku" required>
+                        </div>
 
-     
-        function getCsrfToken() {
-            const cookieValue = document.cookie
-                .split('; ')
-                .find(row => row.startsWith('csrftoken='))
-                ?.split('=')[1];
-            return cookieValue;
-        }
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <input type="text" class="form-control" id="descripcion" name="descripcion" required>
+                        </div>
 
-    </script>
-    
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                        <div class="mb-3">
+                            <label for="cantidad" class="form-label">Cantidad</label>
+                            <input type="number" class="form-control" id="cantidad" name="cantidad" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="categoria" class="form-label">Categoría</label>
+                            <select class="form-control" id="categoria" name="categoria" required>
+                                <option value="faltantes">Faltantes</option>
+                                {% if request.user.is_superuser %}
+                                <option value="agotados">Agotados con el proveedor</option>
+                                {% endif %}
+
+                                <option value="demasiadas_existencias">Demasiadas existencias</option>
+                                <option value="bajo_pedido">Bajo pedido</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="importancia" class="form-label">Nivel de Importancia</label>
+                            <div class="rating">
+                                <input type="radio" id="estrella5" name="importancia" value="5">
+                                <label for="estrella5">&#9733;</label>
+                                <input type="radio" id="estrella4" name="importancia" value="4">
+                                <label for="estrella4">&#9733;</label>
+                                <input type="radio" id="estrella3" name="importancia" value="3">
+                                <label for="estrella3">&#9733;</label>
+                                <input type="radio" id="estrella2" name="importancia" value="2">
+                                <label for="estrella2">&#9733;</label>
+                                <input type="radio" id="estrella1" name="importancia" value="1">
+                                <label for="estrella1">&#9733;</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">Guardar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal para Editar Producto -->
+    <div class="modal fade" id="editarProductoModal" tabindex="-1" aria-labelledby="editarProductoModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarProductoModalLabel">Editar Producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <form method="POST" id="formEditarProducto">
+                        {% csrf_token %}
+                        <input type="hidden" name="id" id="editarId">
+
+                        <div class="mb-3">
+                            <label for="editarSku" class="form-label">SKU</label>
+                            <input type="text" class="form-control" id="editarSku" name="sku" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editarDescripcion" class="form-label">Descripción</label>
+                            <input type="text" class="form-control" id="editarDescripcion" name="descripcion" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editarCantidad" class="form-label">Cantidad</label>
+                            <input type="number" class="form-control" id="editarCantidad" name="cantidad" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editarCategoria" class="form-label">Categoría</label>
+                            <select class="form-control" id="editarCategoria" name="categoria" required>
+                                <option value="faltantes">Faltantes</option>
+                                 {% if request.user.is_superuser %}
+                                <option value="agotados">Agotados con el proveedor</option>
+                                {% endif %}
+                                <option value="demasiadas_existencias">Demasiadas existencias</option>
+                                <option value="bajo_pedido">Bajo pedido</option>
+                            </select>
+                        </div>
+
+                        {% if request.user.is_superuser %}
+                        <div class="mb-3">
+                            <label for="editarPrecioCompra" class="form-label">Precio de Compra</label>
+                            <input type="number" step="0.01" class="form-control" id="editarPrecioCompra"
+                                name="precio_compra" required>
+                        </div>
+                        {% else %}
+                        <input type="hidden" name="precio_compra" id="editarPrecioCompra">
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="editarImportancia" class="form-label">Nivel de Importancia</label>
+                            <div class="rating">
+                                {% for i in "54321" %}
+                                <input type="radio" id="editarEstrella{{ i }}" name="importancia" value="{{ i }}"
+                                    required>
+                                <label for="editarEstrella{{ i }}">&#9733;</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {% if request.user.is_superuser %}
+                        <div class="mb-3">
+                            <label for="editarProveedor" class="form-label">Proveedor</label>
+                            <input type="text" class="form-control" id="editarProveedor" name="proveedor" required>
+                        </div>
+                        {% else %}
+                        <input type="hidden" name="proveedor" id="editarProveedor">
+                        {% endif %}
+
+                        {% if request.user.is_superuser %}
+                        <div class="mb-3">
+                            <label for="editarNota" class="form-label">Nota</label>
+                            <textarea class="form-control" id="editarNota" name="nota" rows="3" required></textarea>
+                        </div>
+                        {% else %}
+                        <input type="hidden" name="nota" id="editarNota">
+                        {% endif %}
+
+                        <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 
     <script>
-        $(document).ready(function() {
-            $("#sku").on("input", function() {
-                var sku = $(this).val().trim();
+        document.addEventListener("DOMContentLoaded", function () {
+                const userBtn = document.getElementById("userBtn");
+                const userMenu = document.getElementById("userMenu");
     
-                if (sku.length > 2) { // Para evitar consultas con muy pocos caracteres
-                    $.ajax({
-                        url: "{% url 'obtener_descripcion_sku' %}",
-                        type: "POST",
-                        data: {
-                            "sku": sku,
-                            "csrfmiddlewaretoken": "{{ csrf_token }}"
-                        },
-                        success: function(response) {
-                            if (response.descripcion) {
-                                $("#descripcion").val(response.descripcion); // Llena la descripción
-                            } else {
-                                $("#descripcion").val("No encontrado");
-                            }
-                        },
-                        error: function() {
-                            console.error("Error al obtener la descripción.");
+                if (userBtn && userMenu) {
+                    userBtn.addEventListener("click", function (event) {
+                        // Alternar la visibilidad del menú
+                        userMenu.classList.toggle("d-none");
+                        event.stopPropagation(); // Evitar que el clic se propague y cierre el menú inmediatamente
+                    });
+    
+                    // Ocultar el menú si se hace clic fuera de él
+                    document.addEventListener("click", function (event) {
+                        if (!userMenu.contains(event.target) && !userBtn.contains(event.target)) {
+                            userMenu.classList.add("d-none");
                         }
                     });
                 }
             });
-        });
-    </script>
+        </script>
+    
         <script>
-            $(document).ready(function() {
-                $("#editarSku").on("input", function() {
+            function toggleListo(productoId) {
+                const checkbox = document.getElementById(`switch-${productoId}`);
+    
+                // Si el usuario no es superuser, evitar el cambio
+                if (checkbox.disabled) {
+                    return;
+                }
+    
+                const estadoListo = checkbox.checked;
+    
+                fetch(`/producto/toggle_listo/${productoId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken(),
+                    },
+                    body: JSON.stringify({ listo: estadoListo }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            alert('Hubo un error al actualizar el estado.');
+                            checkbox.checked = !estadoListo;  // Revierte el cambio si hay error
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        checkbox.checked = !estadoListo;  // Revierte el cambio si hay error
+                    });
+            }
+    
+            function getCsrfToken() {
+                const cookieValue = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('csrftoken='))
+                    ?.split('=')[1];
+                return cookieValue;
+            }
+        </script>
+    
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            function ordenarPor(campo) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const ordenActual = urlParams.get('orden') === 'asc' ? 'desc' : 'asc';
+                urlParams.set('orden', ordenActual);
+                urlParams.set('ordenar_por', campo);
+                window.location.search = urlParams.toString();
+            }
+    
+            function seleccionarEstrella(valor) {
+                document.getElementById('estrella' + valor).checked = true;
+            }
+    
+        </script>
+        <script>
+            const editarProductoModal = document.getElementById('editarProductoModal');
+            editarProductoModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const id = button.getAttribute('data-id');
+                const sku = button.getAttribute('data-sku');
+                const descripcion = button.getAttribute('data-descripcion');
+                const precio = button.getAttribute('data-precio');
+                const importancia = button.getAttribute('data-importancia');
+    
+    
+                const modalForm = editarProductoModal.querySelector('form');
+                modalForm.action = `/producto/actualizar/${id}/`;
+                document.getElementById('editarId').value = id;
+                document.getElementById('editarSku').value = sku;
+                document.getElementById('editarDescripcion').value = descripcion;
+                document.getElementById('editarPrecioCompra').value = precio;
+    
+    
+                if (importancia) {
+                    const importanciaInput = document.getElementById(`editarEstrella${importancia}`);
+                    if (importanciaInput) importanciaInput.checked = true;
+                }
+            });
+        </script>
+    
+        <script>
+            function eliminarProducto(productoId) {
+                if (!confirm("¿Estás seguro de que deseas eliminar este producto?")) {
+                    return;
+                }
+    
+                fetch(`/producto/eliminar/${productoId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload();
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al eliminar el producto:', error);
+                        alert('Ocurrió un error al intentar eliminar el producto.');
+                    });
+            }
+        </script>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const messages = document.querySelector('.alert');
+                if (messages) {
+                    const modal = new bootstrap.Modal(document.getElementById('agregarProductoModal'));
+                    modal.show();
+                }
+            });
+        </script>
+    
+        <script>
+            function toggleListo(productoId) {
+                const checkbox = document.getElementById(`switch-${productoId}`);
+    
+                // Si el usuario no es superuser, evitar el cambio
+                if (checkbox.disabled) {
+                    return;
+                }
+    
+                const estadoListo = checkbox.checked;
+    
+                fetch(`/producto/toggle_listo/${productoId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken(),
+                    },
+                    body: JSON.stringify({ listo: estadoListo }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Actualizar la categoría en la tabla
+                            const categoriaTd = document.getElementById(`categoria-${productoId}`);
+                            if (categoriaTd) {
+                                categoriaTd.innerHTML = `<span class="badge bg-success">${data.categoria}</span>`;
+                            }
+                        } else {
+                            alert('Hubo un error al actualizar el estado.');
+                            checkbox.checked = !estadoListo;  // Revierte el cambio si hay error
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        checkbox.checked = !estadoListo;  // Revierte el cambio si hay error
+                    });
+            }
+    
+            function getCsrfToken() {
+                const cookieValue = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('csrftoken='))
+                    ?.split('=')[1];
+                return cookieValue;
+            }
+        </script>
+   <script>
+    function aplicarFiltro(campo, valor) {
+        let url = new URL(window.location.href);
+        url.searchParams.set(campo, valor);  // Agrega o actualiza el filtro
+        url.searchParams.set('page', 1);  // Reinicia la paginación para evitar errores
+        window.location.href = url.toString();  // Redirige con los nuevos filtros
+    }
+    </script>
+    
+            
+        <script>
+          function actualizarNotificaciones() {
+        fetch("{% url 'obtener_notificaciones' %}")
+            .then(response => response.json())
+            .then(data => {
+                let contador = document.getElementById("contadorNotificaciones");
+                let lista = document.getElementById("listaNotificaciones");
+    
+                // ✅ Actualizar contador de notificaciones no leídas
+                if (data.total_no_leidas > 0) {
+                    contador.textContent = data.total_no_leidas;
+                    contador.style.display = "inline-block";
+                } else {
+                    contador.style.display = "none";
+                }
+    
+                // ✅ Limpiar lista de notificaciones
+                lista.innerHTML = "";
+    
+                if (data.notificaciones.length > 0) {
+                    data.notificaciones.forEach(n => {
+                        let claseLeido = n.leido ? "text-muted" : "fw-bold text-dark";
+                        lista.innerHTML += `
+                            <div class="border-bottom py-2 ${claseLeido}" id="notificacion-${n.id}">
+                                <small class="d-block text-secondary">${n.fecha}</small>
+                                <p class="mb-1 d-inline">${n.mensaje}</p>
+                                <button class="btn btn-sm btn-danger float-end" onclick="eliminarNotificacion(${n.id})">🗑️</button>
+                            </div>`;
+                    });
+    
+                    // Agregar botón para eliminar todas
+                    lista.innerHTML += `
+                        <div class="text-center mt-3">
+                            <button id="eliminarTodasBtn" class="btn btn-sm btn-danger w-100" onclick="eliminarTodasNotificaciones()">🗑️ Eliminar todas</button>
+                        </div>`;
+                } else {
+                    lista.innerHTML = '<p class="text-muted text-center">📭 No tienes nuevas notificaciones</p>';
+                }
+            })
+            .catch(error => console.error("Error obteniendo notificaciones:", error));
+    }
+    
+    // ✅ Eliminar una notificación
+    function eliminarNotificacion(notificacionId) {
+        fetch(`/notificaciones/eliminar/${notificacionId}/`, {
+            method: "DELETE",
+            headers: { "X-CSRFToken": getCsrfToken() }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById(`notificacion-${notificacionId}`).remove();
+                actualizarNotificaciones(); // Actualizar la lista después de eliminar
+            } else {
+                alert("Error al eliminar la notificación.");
+            }
+        });
+    }
+    
+    // ✅ Eliminar todas las notificaciones
+    function eliminarTodasNotificaciones() {
+        if (!confirm("¿Estás seguro de que deseas eliminar todas las notificaciones?")) return;
+    
+        fetch(`/notificaciones/eliminar_todas/`, {
+            method: "DELETE",
+            headers: { "X-CSRFToken": getCsrfToken() }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById("listaNotificaciones").innerHTML = '<p class="text-muted text-center">📭 No tienes nuevas notificaciones</p>';
+                actualizarNotificaciones();
+            } else {
+                alert("Error al eliminar todas las notificaciones.");
+            }
+        });
+    }
+    
+    // ✅ Mostrar/Ocultar el menú desplegable de notificaciones
+    document.getElementById("notificacionesBtn").addEventListener("click", function(event) {
+        let dropdown = document.getElementById("notificacionesDropdown");
+        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+        event.stopPropagation();
+    });
+    
+    // ✅ Ocultar el menú si se hace clic fuera
+    document.addEventListener("click", function(event) {
+        let dropdown = document.getElementById("notificacionesDropdown");
+        let btn = document.getElementById("notificacionesBtn");
+        if (!btn.contains(event.target) && !dropdown.contains(event.target)) {
+            dropdown.style.display = "none";
+        }
+    });
+    
+    // ✅ Marcar todas como leídas
+    document.getElementById("marcarLeidasBtn").addEventListener("click", function() {
+        fetch("{% url 'marcar_notificaciones_leidas' %}", { 
+            method: "POST", 
+            headers: { "X-CSRFToken": getCsrfToken() } 
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarNotificaciones();
+            }
+        });
+    });
+    
+    // ✅ Obtener CSRF Token
+    function getCsrfToken() {
+        const cookieValue = document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+        return cookieValue;
+    }
+    
+    // ✅ Actualizar notificaciones cada 5 segundos
+    setInterval(actualizarNotificaciones, 5000);
+    actualizarNotificaciones();
+    
+    
+        </script>
+    
+        <script>
+            function toggleListo(productoId) {
+                const checkbox = document.getElementById(`switch-${productoId}`);
+    
+                // Si el usuario no es superuser, evitar el cambio
+                if (checkbox.disabled) {
+                    return;
+                }
+    
+                const estadoListo = checkbox.checked;
+    
+                fetch(`/producto/toggle_listo/${productoId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken(),
+                    },
+                    body: JSON.stringify({ listo: estadoListo }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // ✅ Actualizar la categoría en la tabla dinámicamente
+                            const categoriaTd = document.getElementById(`categoria-${productoId}`);
+                            if (categoriaTd) {
+                                let categoriaColor = "bg-secondary"; // Color por defecto (gris)
+    
+                                if (data.categoria === "Realizados") {
+                                    categoriaColor = "bg-success"; // ✅ Verde si es "Realizados"
+                                } else if (data.categoria === "Faltantes") {
+                                    categoriaColor = "bg-danger"; // ✅ Rojo si es "Faltantes"
+                                }
+    
+                                categoriaTd.innerHTML = `<span class="badge ${categoriaColor}">${data.categoria}</span>`;
+                            }
+                        } else {
+                            alert('Hubo un error al actualizar el estado.');
+                            checkbox.checked = !estadoListo;  // Revierte el cambio si hay error
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        checkbox.checked = !estadoListo;
+                    });
+            }
+    
+            function getCsrfToken() {
+                const cookieValue = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('csrftoken='))
+                    ?.split('=')[1];
+                return cookieValue;
+            }
+    
+        </script>
+    
+    
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+        <script>
+            $(document).ready(function () {
+                $("#sku").on("input", function () {
                     var sku = $(this).val().trim();
-        
+    
+                    if (sku.length > 2) { // Para evitar consultas con muy pocos caracteres
+                        $.ajax({
+                            url: "{% url 'obtener_descripcion_sku' %}",
+                            type: "POST",
+                            data: {
+                                "sku": sku,
+                                "csrfmiddlewaretoken": "{{ csrf_token }}"
+                            },
+                            success: function (response) {
+                                if (response.descripcion) {
+                                    $("#descripcion").val(response.descripcion); // Llena la descripción
+                                } else {
+                                    $("#descripcion").val("No encontrado");
+                                }
+                            },
+                            error: function () {
+                                console.error("Error al obtener la descripción.");
+                            }
+                        });
+                    }
+                });
+            });
+        </script>
+        <script>
+            $(document).ready(function () {
+                $("#editarSku").on("input", function () {
+                    var sku = $(this).val().trim();
+    
                     if (sku.length > 2) { // Evita consultas con pocos caracteres
                         $.ajax({
                             url: "{% url 'obtener_descripcion_sku' %}",
@@ -754,22 +1105,22 @@
                                 "sku": sku,
                                 "csrfmiddlewaretoken": "{{ csrf_token }}"
                             },
-                            success: function(response) {
+                            success: function (response) {
                                 if (response.descripcion) {
                                     $("#editarDescripcion").val(response.descripcion); // Llena la descripción
                                 } else {
                                     $("#editarDescripcion").val("No encontrado");
                                 }
                             },
-                            error: function() {
+                            error: function () {
                                 console.error("Error al obtener la descripción.");
                             }
                         });
                     }
                 });
-        
+    
                 // Rellenar datos del modal de edición cuando se abre
-                $('#editarProductoModal').on('show.bs.modal', function(event) {
+                $('#editarProductoModal').on('show.bs.modal', function (event) {
                     var button = $(event.relatedTarget); // Botón que activó el modal
                     var id = button.data('id');
                     var sku = button.data('sku');
@@ -778,23 +1129,23 @@
                     var importancia = button.data('importancia');
                     var proveedor = button.data('proveedor');
                     var nota = button.data('nota');
-        
+    
                     $("#editarId").val(id);
                     $("#editarSku").val(sku);
                     $("#editarDescripcion").val(descripcion);
                     $("#editarPrecioCompra").val(precio);
                     $("#editarProveedor").val(proveedor);
                     $("#editarNota").val(nota);
-        
+    
                     if (importancia) {
                         $("#editarEstrella" + importancia).prop("checked", true);
                     }
                 });
             });
         </script>
-    
+        
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 
 </body>
