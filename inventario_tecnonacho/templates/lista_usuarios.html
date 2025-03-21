@@ -1,50 +1,32 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Usuarios</title>
-    <link rel="icon" type="image/png" href="https://i.imgur.com/CiALsHe.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .container {
-            max-width: 900px;
-            margin-top: 50px;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        .table th, .table td {
-            text-align: center;
-            vertical-align: middle;
-        }
-        .btn-sm {
-            padding: 5px 10px;
-            font-size: 0.875rem;
-        }
-        .badge-admin {
-            background-color: #6c757d;
-            color: white;
-            font-size: 0.8rem;
-            padding: 5px 10px;
-            border-radius: 10px;
-        }
-        @media (max-width: 768px) {
-            .btn-sm {
-                width: 100%;
-                margin-bottom: 5px;
-            }
-        }
-    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/usuarios.css' %}">
 </head>
 <body>
     <div class="container">
         <h2 class="text-center mb-4">👥 Gestión de Usuarios</h2>
-        
+
+        <form method="get" class="mb-4">
+            <div class="row g-2">
+                <div class="col-12 col-md-auto ">
+                    <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Buscar usuarios...">
+                </div>
+                <div class="col-6 col-md-auto">
+                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> </button>
+                </div>
+                <div class="col-6 col-md-auto">
+                    <a href="{% url 'lista_usuarios' %}" class="btn btn-secondary w-100"><i class="fas fa-sync"></i></a>
+                </div>
+            </div>
+        </form>
+
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }}">{{ message }}</div>
@@ -57,7 +39,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Usuario</th>
-                      
+                        <th>Rol</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -74,16 +56,29 @@
                                 {% endif %}
                                 {{ usuario.username }}
                             </div>
-                        </td>                     
+                        </td>
                         <td>
-                            {% if not usuario.is_superuser %}
-                                <div class="d-flex flex-wrap gap-2 justify-content-center">
-                                    <a href="{% url 'cambiar_contraseña_usuario' usuario.id %}" class="btn btn-warning btn-sm">🔑 Cambiar</a>
-                                    <a href="{% url 'eliminar_usuario' usuario.id %}" class="btn btn-danger btn-sm" onclick="return confirm('¿Eliminar a {{ usuario.username }}?');">🗑 Eliminar</a>
-                                </div>
+                            {% if usuario.is_superuser %}
+                                <span class="badge bg-danger">Administrador</span>
                             {% else %}
-                                <span class="badge-admin">Administrador</span>
+                                <span class="badge bg-success">Cliente</span>
                             {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                                {% if not usuario.is_superuser %}
+                                    <a href="{% url 'cambiar_contraseña_usuario' usuario.id %}" class="btn btn-warning btn-sm">🔑 Cambiar</a>
+                                    <a href="{% url 'eliminar_usuario' usuario.id %}" class="btn btn-danger btn-sm" 
+                                       onclick="return confirm('¿Eliminar a {{ usuario.username }}?');">🗑 Eliminar</a>
+                                {% endif %}
+                                
+                                {% if request.user.is_superuser and usuario.id != request.user.id %}
+                                    <a href="{% url 'cambiar_rol_usuario' usuario.id %}" 
+                                       class="btn {% if usuario.is_superuser %}btn-secondary{% else %}btn-info{% endif %} btn-sm">
+                                       🔄 {% if usuario.is_superuser %} Convertir en Cliente {% else %} Convertir en Admin {% endif %}
+                                    </a>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
@@ -95,6 +90,42 @@
             </table>
         </div>
 
+        <nav aria-label="Paginación">
+            <ul class="pagination justify-content-center">
+                {% if usuarios.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1" aria-label="Primera">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ usuarios.previous_page_number }}" aria-label="Anterior">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for num in usuarios.paginator.page_range %}
+                <li class="page-item {% if usuarios.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+
+                {% if usuarios.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ usuarios.next_page_number }}" aria-label="Siguiente">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ usuarios.paginator.num_pages }}" aria-label="Última">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        
         <a href="{% url 'lista_productos' %}" class="btn btn-primary w-100 mt-3">🔙 Volver a Lista de Productos</a>
     </div>
 </body>

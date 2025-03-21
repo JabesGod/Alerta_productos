@@ -1,0 +1,410 @@
+
+
+.toggleContainer {
+    --width: 50px;
+    --radius: 30px;
+    position: relative;
+    width: var(--width);
+    height: var(--radius);
+    background: lightgray;
+    border-radius: var(--radius);
+}
+
+.toggle {
+    position: absolute;
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+.toggle+.switch {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: var(--radius);
+    height: var(--radius);
+    cursor: pointer;
+    background: red;
+    border-radius: var(--radius);
+    transition: width 0.1s;
+}
+
+.toggle+.switch:before {
+    content: "";
+    position: absolute;
+    width: var(--radius);
+    height: var(--radius);
+    top: 50%;
+    transform: translateY(-50%);
+    background: #ffffff;
+    border-radius: 50%;
+    margin: 0px 2px;
+    left: calc(100% - var(--radius));
+    cursor: pointer;
+}
+
+body {
+    background-color: #e8f5e9;
+}
+
+.btn-primary {
+    background-color: #4caf50;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #45a049;
+}
+
+.btn-danger:hover {
+    background-color: #d32f2f;
+}
+
+.table thead th {
+    cursor: pointer;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    font-size: 2rem;
+    color: #fff;
+    cursor: pointer;
+}
+
+.star-rating input:checked~label {
+    color: black;
+}
+
+.rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+}
+
+.rating input {
+    display: none;
+}
+
+.rating label {
+    font-size: 3rem;
+    color: black;
+    cursor: pointer;
+
+}
+
+.rating input:checked~label,
+.rating label:hover,
+.rating label:hover~label {
+    color: #ffd700;
+
+}
+
+.toggleContainer {
+    --width: 50px;
+    --radius: 30px;
+    position: relative;
+    width: var(--width);
+    height: var(--radius);
+    background: lightgray;
+    border-radius: var(--radius);
+}
+
+.toggle {
+    position: absolute;
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+.toggle+.switch {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: var(--radius);
+    height: var(--radius);
+    cursor: pointer;
+    background: red;
+    border-radius: var(--radius);
+    transition: width 0.1s;
+}
+
+.toggle+.switch:before {
+    content: "";
+    position: absolute;
+    width: var(--radius);
+    height: var(--radius);
+    top: 50%;
+    transform: translateY(-50%);
+    background: #ffffff;
+    border-radius: 50%;
+    margin: 0px 2px;
+    left: calc(100% - var(--radius));
+    cursor: pointer;
+}
+
+.toggle:checked+.switch {
+    width: var(--width);
+    background: rgb(0, 196, 0);
+}
+
+
+.bg-realizados {
+    background-color: rgb(0, 196, 0) !important;
+    /* Verde personalizado */
+    color: white !important;
+    /* Texto en blanco para contraste */
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.bg-agot {
+    background-color: rgb(255, 166, 0);
+}
+
+/* 🟢 Asegura que la tabla no se expanda más allá del container */
+.container {
+    max-width: 1200px;
+    /* Puedes ajustarlo según tu diseño */
+    margin: auto;
+}
+
+.toggle:checked+.switch {
+    width: var(--width);
+    background: rgb(0, 196, 0);
+}
+
+
+/* Estilo base del sidebar */
+.sidebar {
+    width: 250px; /* Ancho por defecto */
+    height: 100vh;
+    background: #2e7d32;
+    position: fixed;
+    top: 0;
+    left: 0;
+    transition: transform 0.3s ease;
+    z-index: 1000;
+}
+/* Ocultar el sidebar cuando tiene la clase hidden */
+.sidebar.hidden {
+    transform: translateX(-100%);
+}
+
+/* Estilo del botón de toggle */
+.toggle-btn {
+    background: #43a047;
+    color: white;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    position: fixed;
+    top: 15px;
+    left: 10px;
+    z-index: 1001;
+}
+
+/* Mover el botón cuando el sidebar está oculto */
+.toggle-btn.collapsed {
+    left: 10px;
+}
+
+#page-content {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+    transition: margin-left 0.3s ease;
+}
+
+/* Expandir el contenido principal cuando el sidebar está oculto */
+#page-content.expanded {
+    margin-left: 0;
+}
+
+/* Estilos adicionales para el sidebar */
+.sidebar h3 {
+    font-size: 1.5rem;
+    color: white;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.sidebar ul {
+    padding-left: 0;
+}
+
+.sidebar .list-group-item {
+    background: transparent;
+    border: none;
+    padding: 15px 20px;
+    font-size: 18px;
+}
+
+.sidebar .list-group-item a {
+    color: white;
+    text-decoration: none;
+    display: block;
+    transition: 0.3s;
+}
+
+.sidebar .list-group-item a:hover {
+    background: #43a047;
+    /* Verde más claro */
+    border-radius: 5px;
+    padding-left: 15px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        width: 200px;
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 768px) {
+    #page-content {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+/* Hacer la tabla responsiva */
+.table-responsive {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Estilo general de la tabla */
+.table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed; /* Evita que las columnas se expandan demasiado */
+}
+
+.table th,
+.table td {
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 50px;
+    max-width: 120px; /* Evita expansión excesiva de celdas */
+    padding: 5px;
+    border: 1px solid #ddd;
+}
+
+/* Ajuste de ancho específico para cada columna */
+.table th:nth-child(1),
+.table td:nth-child(1) {
+    width: 60px; /* SKU */
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+    width: 250px; /* Descripción compacta */
+    white-space: normal; /* Permite saltos de línea */
+    word-wrap: break-word;
+    max-width: 250px; /* Evita que se expanda demasiado */
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+    width: 100px; /* Usuario */
+}
+
+.table th:nth-child(4),
+.table td:nth-child(4) {
+    width: 90px; /* Fecha */
+}
+
+.table th:nth-child(5),
+.table td:nth-child(5) {
+    width: 70px; /* Hora */
+}
+
+.table th:nth-child(6),
+.table td:nth-child(6) {
+    width: 80px; /* Cantidad */
+}
+
+.table th:nth-child(7),
+.table td:nth-child(7) {
+    width: 120px; /* Categoría */
+}
+
+.table th:nth-child(8),
+.table td:nth-child(8) {
+    width: 90px; /* Importancia */
+}
+
+/* Si el usuario es superusuario, ajustar las columnas extra */
+.table th:nth-child(9),
+.table td:nth-child(9) {
+    width: 100px; /* Precio */
+}
+
+.table th:nth-child(10),
+.table td:nth-child(10) {
+    width: 120px; /* Proveedor */
+}
+
+.table th:nth-child(11),
+.table td:nth-child(11) {
+    width: 100px; /* Nota */
+}
+
+.table th:nth-child(12),
+.table td:nth-child(12) {
+    width: 80px; /* Listo */
+}
+
+.table th:nth-child(13),
+.table td:nth-child(13) {
+    width: 100px; /* Acciones */
+}
+
+/* Mejoras visuales */
+.table th {
+    background-color: #222;
+    color: white;
+    font-weight: bold;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #f5f5f5;
+}
+
+/* Ajuste para iconos de ordenamiento */
+th i {
+    font-size: 12px; /* Reduce el tamaño del icono de ordenamiento */
+    margin-left: 5px;
+}
+
+/* Permitir desplazamiento horizontal en dispositivos móviles */
+@media (max-width: 768px) {
+    .table-responsive {
+        overflow-x: auto;
+        display: block;
+    }
+    
+    .table th,
+    .table td {
+        font-size: 12px; /* Reducir tamaño de fuente en pantallas pequeñas */
+        padding: 3px;
+    }
+
+    /* Ajuste aún más compacto en móviles */
+    .table th:nth-child(2),
+    .table td:nth-child(2) {
+        max-width: 180px;
+    }
+}
+

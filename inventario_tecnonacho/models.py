@@ -1,11 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.conf import settings
-
-from django.core.exceptions import ValidationError
 from django.db import models
-from django.conf import settings
-
+from cities_light.models import Region, City 
 class Producto(models.Model):
     CATEGORIAS = [
         ('faltantes', 'Faltantes'),
@@ -70,9 +67,6 @@ class UsuarioPersonalizado(AbstractUser):
         return self.username
     
 
-    
-from django.db import models
-from django.conf import settings
 
 class Notificacion(models.Model):
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -82,3 +76,54 @@ class Notificacion(models.Model):
 
     def __str__(self):
         return f"{self.usuario.username} - {self.mensaje}"
+
+
+class Categoria(models.Model):
+    nombre = models.CharField(max_length=255, unique=True)
+    
+    def __str__(self):
+        return self.nombre
+
+
+class Marca(models.Model):
+    nombre = models.CharField(max_length=255, unique=True)
+    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
+    imagen = models.ImageField(upload_to='marcas/', null=True, blank=True)
+    departamento = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, blank=True)
+    ciudad = models.ForeignKey(City, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        """Actualiza la imagen de los proveedores si cambia la imagen de la marca."""
+        if self.pk:  # Si la marca ya existe
+            old_marca = Marca.objects.get(pk=self.pk)
+            if old_marca.imagen != self.imagen:  # Si la imagen cambió
+                for proveedor in self.proveedores.all():  # `related_name="proveedores"`
+                    if proveedor.imagen == old_marca.imagen:  # Solo si usaba la imagen de la marca
+                        proveedor.imagen = self.imagen
+                        proveedor.save()  # Guardar proveedor con la nueva imagen
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.nombre
+
+
+
+class Proveedor(models.Model):
+    marca = models.ForeignKey(Marca, on_delete=models.CASCADE, related_name="proveedores")
+    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
+    nombre = models.CharField(max_length=255)
+    celular = models.CharField(max_length=15, help_text="Número de contacto")
+    nota = models.TextField(null=True, blank=True)
+    departamento = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, blank=True)
+    ciudad = models.ForeignKey(City, on_delete=models.SET_NULL, null=True, blank=True)
+    imagen = models.ImageField(upload_to='proveedores/', null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        """Si el proveedor no tiene imagen, usa la imagen de la marca."""
+        if not self.imagen and self.marca and self.marca.imagen:
+            self.imagen = self.marca.imagen
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.nombre} - {self.marca.nombre}"

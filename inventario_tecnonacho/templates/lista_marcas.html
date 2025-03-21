@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+{% block title %}Lista de Marcas{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2 class="text-center"> Lista de Marcas </h2>
+    <div class="d-flex align-items-center gap-2">
+        {% if request.user.is_superuser %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarMarcaModal">
+                Agregar Marca
+            </button>
+        {% endif %}
+    
+        <button class="btn btn-secondary" type="button" onclick="location.href='{% url 'lista_marcas' %}'">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    
+        <form method="GET" class="d-flex gap-2">
+            <input type="text" name="q" class="form-control" placeholder="Buscar por nombre o categoría"
+                value="{{ request.GET.q }}">
+        </form>
+    </div>
+    
+
+    <table class="table table-striped table-bordered mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Departamento</th>
+                <th>Ciudad</th>
+                <th>Imagen</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for marca in page_obj %}
+            <tr>
+                <td>{{ marca.nombre }}</td>
+                <td>{{ marca.categoria.nombre }}</td>
+                <td>{{ marca.departamento }}</td>
+                <td>{{ marca.ciudad }}</td>
+
+                <td>
+                    {% if marca.imagen %}
+                    <img src="{{ marca.imagen.url }}" width="70" alt="Imagen de {{ marca.nombre }}">
+                    {% else %}
+                    No disponible
+                    {% endif %}
+                </td>
+                <td>
+                    {% if request.user.is_superuser %}
+                        <!-- Botón Editar -->
+                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#editarMarcaModal{{ marca.id }}">Editar</button>
+                
+                        <!-- Botón Eliminar -->
+                        <button class="btn btn-danger btn-sm" onclick="abrirModalEliminar({{ marca.id }})">
+                            Eliminar
+                        </button>
+                    {% endif %}
+                </td>
+                
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No hay marcas disponibles.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <!-- Paginación -->
+    <div class="pagination">
+        <nav aria-label="Paginación">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                        aria-label="Primera">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                        aria-label="Anterior">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                        {{ num }}
+                    </a>
+                </li>
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                        aria-label="Siguiente">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                        aria-label="Última">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    <!-- Modal Editar Marca -->
+    {% for marca in page_obj %}
+    <div class="modal fade" id="editarMarcaModal{{ marca.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Marca</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{% url 'editar_marca' marca.id %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" name="nombre" class="form-control" value="{{ marca.nombre }}">
+                        </div>
+
+                        <label>Categoría:</label>
+                        <select name="categoria" class="form-control">
+                            {% for categoria in categorias %}
+                            <option value="{{ categoria.id }}"
+                                {% if marca.categoria and marca.categoria.id == categoria.id %} selected {% endif %}>
+                                {{ categoria.nombre }}
+                            </option>
+                        {% endfor %}
+                        
+
+                        </select>
+
+                        <label>Departamento:</label>
+                        <select name="departamento" class="form-control departamento-select">
+                            {% for depto in departamentos %}
+                                <option value="{{ depto.id }}" 
+                                    {% if marca.departamento and marca.departamento.id == depto.id %} selected {% endif %}>
+                                    {{ depto.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        
+
+                        <label>Ciudad:</label>
+                        <select name="ciudad" class="form-control ciudad-select">
+                            {% for ciudad in ciudades %}
+                                <option value="{{ ciudad.id }}"
+                                    {% if marca.ciudad and marca.ciudad.id == ciudad.id %} selected {% endif %}>
+                                    {{ ciudad.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        
+
+                        <div class="mb-3">
+                            <label class="form-label">Imagen</label>
+                            <input type="file" name="imagen" class="form-control">
+                            {% if marca.imagen %}
+                            <img src="{{ marca.imagen.url }}" width="50" class="mt-2"
+                                alt="Imagen de {{ marca.nombre }}">
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Modal Agregar Marca -->
+    <div class="modal fade" id="agregarMarcaModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Agregar Marca</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{% url 'agregar_marca' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" name="nombre" class="form-control" placeholder="Ingrese el nombre">
+                        </div>
+
+                        <label>Categoría:</label>
+                        <select name="categoria" class="form-control">
+                            {% for categoria in categorias %}
+                            <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                        <label>Departamento:</label>
+                        <select name="departamento" class="form-control departamento-select">
+                            {% for depto in departamentos %}
+                                <option value="{{ depto.id }}" 
+                                    {% if marca.departamento and marca.departamento.id == depto.id %} selected {% endif %}>
+                                    {{ depto.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        
+
+                        <label>Ciudad:</label>
+                        <select name="ciudad" class="form-control ciudad-select">
+                            {% for ciudad in ciudades %}
+                                <option value="{{ ciudad.id }}"
+                                    {% if marca.ciudad and marca.ciudad.id == ciudad.id %} selected {% endif %}>
+                                    {{ ciudad.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Imagen</label>
+                            <input type="file" name="imagen" class="form-control">
+                        </div>
+
+                        <button type="submit" class="btn btn-success">Guardar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Modal de Confirmación para Eliminar -->
+<div class="modal fade" id="confirmarEliminarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar esta marca?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".departamento-select").forEach(departamentoSelect => {
+            departamentoSelect.addEventListener("change", function () {
+                let modal = this.closest(".modal"); // Encuentra el modal más cercano
+                let ciudadSelect = modal.querySelector(".ciudad-select");
+                let departamentoId = this.value;
+
+                ciudadSelect.innerHTML = '<option value="">Cargando ciudades...</option>';
+
+                if (departamentoId) {
+                    fetch(`/obtener-ciudades/?departamento_id=${departamentoId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            ciudadSelect.innerHTML = '<option value="">Selecciona una ciudad</option>';
+                            data.forEach(ciudad => {
+                                ciudadSelect.innerHTML += `<option value="${ciudad.id}">${ciudad.name}</option>`;
+                            });
+                        })
+                        .catch(error => {
+                            console.error("Error al cargar ciudades:", error);
+                            ciudadSelect.innerHTML = '<option value="">Error al cargar</option>';
+                        });
+                } else {
+                    ciudadSelect.innerHTML = '<option value="">Selecciona primero un departamento</option>';
+                }
+            });
+        });
+    });
+</script>
+<script>
+    let marcaAEliminar = null; // Variable para almacenar el ID de la marca
+
+    function abrirModalEliminar(id) {
+        marcaAEliminar = id; // Guardar el ID de la marca a eliminar
+        let modal = new bootstrap.Modal(document.getElementById('confirmarEliminarModal'));
+        modal.show();
+    }
+
+    document.getElementById('btnConfirmarEliminar').addEventListener('click', function () {
+        if (marcaAEliminar) {
+            fetch(`/marcas/eliminar/${marcaAEliminar}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.mensaje) {
+                    alert(data.mensaje);
+                    location.reload(); // Recargar la página después de eliminar
+                } else {
+                    alert("Error al eliminar la marca.");
+                }
+            });
+        }
+    });
+
+    function getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("Recargando script de menu-toggle en categorías");
+        const menuToggle = document.getElementById("menu-toggle");
+        const sidebar = document.getElementById("sidebar");
+        const pageContent = document.getElementById("page-content");
+
+        menuToggle.addEventListener("click", function () {
+            sidebar.classList.toggle("hidden");
+            pageContent.classList.toggle("expanded");
+
+            let icon = menuToggle.querySelector("i");
+            if (sidebar.classList.contains("hidden")) {
+                menuToggle.style.left = "10px";
+                icon.classList.remove("fa-arrow-left");
+                icon.classList.add("fa-arrow-right");
+            } else {
+                menuToggle.style.left = "260px";
+                icon.classList.remove("fa-arrow-right");
+                icon.classList.add("fa-arrow-left");
+            }
+        });
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        let esSuperusuario = "{{ request.user.is_superuser }}" === "True";
+
+        if (!esSuperusuario) {
+            document.querySelectorAll('.editar-btn, .eliminar-btn, #abrirModalBtn').forEach(btn => {
+                btn.style.display = 'none';
+            });
+        }
+    });
+
+</script>
+
+
+{% endblock %}
+{% endblock %}

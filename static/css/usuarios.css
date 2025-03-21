@@ -1,0 +1,33 @@
+
+body {
+    background-color: #f8f9fa;
+}
+.container {
+    max-width: 900px;
+    margin-top: 50px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+.table th, .table td {
+    text-align: center;
+    vertical-align: middle;
+}
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 0.875rem;
+}
+.badge-admin {
+    background-color: #6c757d;
+    color: white;
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    border-radius: 10px;
+}
+@media (max-width: 768px) {
+    .btn-sm {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+}

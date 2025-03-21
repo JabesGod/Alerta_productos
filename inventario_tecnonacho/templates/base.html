@@ -1,0 +1,454 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Tecnonacho{% endblock %}</title>
+    <link rel="icon" type="image/png" href="https://i.imgur.com/CiALsHe.png">
+    <link rel="stylesheet" href="{% static 'css/listap.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+</head>
+
+
+
+<body>
+
+    <div class="d-flex" id="wrapper">
+
+        <!-- 📌 Sidebar -->
+        <div class="sidebar bg-green" id="sidebar">
+            <h3 class="text-white text-center py-3"><i class="fa-solid fa-power-off text-dark"> </i> Tecnonacho</h3>
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <a href="{% url 'lista_productos' %}">
+                        <i class="fa-solid fa-laptop text-dark"></i> Lista Productos
+                    </a>
+                </li>
+                <li class="list-group-item">
+                    <a href="{% url 'lista_proveedores' %}">
+                        <i class="fas fa-truck text-dark"></i> Proveedores
+                    </a>
+                </li>
+                <li class="list-group-item">
+                    <a href="{% url 'lista_marcas' %}">
+                        <i class="fas fa-tags text-dark"></i> Marcas
+                    </a>
+                </li>
+                <li class="list-group-item">
+                    <a href="{% url 'lista_categorias' %}">
+                        <i class="fas fa-list-alt text-dark"></i> Categorías
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 📌 Contenido Principal -->
+        <div id="page-content">
+            <button class="btn btn-green toggle-btn" id="menu-toggle">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+
+
+            <div class="container mt-4">
+                <div class="d-flex justify-content-end align-items-center position-relative">
+
+                    <!-- 📷 Botón de usuario con imagen -->
+                    <div class="position-relative">
+                        <button class="border-0 p-0" id="userBtn" style="background: none; cursor: pointer;">
+                            {% if user.foto_perfil %}
+                            <img src="{{ user.foto_perfil.url }}" alt="Foto de perfil" class="rounded-circle"
+                                style="width: 50px; height: 50px; object-fit: cover;">
+                            {% else %}
+                            <i class="fa-regular fa-circle-user" style="font-size: 2rem;"></i>
+                            {% endif %}
+                        </button>
+
+                        <!-- 🔹 Menú desplegable de usuario -->
+                        <ul class="list-group position-absolute mt-2 d-none" id="userMenu"
+                            style="min-width: 160px; background: white; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); right: 0; z-index: 1050;">
+                            <li class="list-group-item p-2 text-center">
+                                <a class="text-success text-decoration-none small" href="{% url 'perfil_usuario' %}">👤
+                                    Perfil</a>
+                            </li>
+                            <li class="list-group-item p-2 text-center">
+                                <a class="text-danger text-decoration-none small" href="{% url 'salir' %}">🚪 Cerrar
+                                    Sesión</a>
+                            </li>
+                            {% if user.is_superuser %}
+                            <li class="list-group-item p-2 text-center">
+                                <a class="text-primary text-decoration-none small" href="{% url 'lista_usuarios' %}">⚙️
+                                    Gestionar Usuarios</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+
+                    <div class="position-relative ms-3 ">
+                        <button id="notificacionesBtn" class="btn btn-outline-light position-relative border-0">
+                            <i class="fas fa-bell fa-2x text-dark "></i>
+                            <span id="contadorNotificaciones"
+                                class="badge bg-danger position-absolute top-0 start-100 translate-middle "
+                                style="display:none;">0</span>
+                        </button>
+
+                        <!-- 🔹 Menú desplegable de Notificaciones -->
+                        <div id="notificacionesDropdown" class="dropdown-menu p-3 shadow"
+                            style="width: 320px; display: none; position: absolute; right: 0; z-index: 1050;">
+                            <h6 class="dropdown-header text-center fw-bold text-primary">🔔 Notificaciones Recientes
+                            </h6>
+
+                            <div id="listaNotificaciones" class="px-2">
+                                <p class="text-muted text-center">📭 No tienes nuevas notificaciones</p>
+                            </div>
+
+                            <div class="text-center mt-3">
+                                <button id="marcarLeidasBtn" class="btn btn-sm btn-success w-100">✅ Marcar todas como
+                                    leídas</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% block content %}{% endblock %}
+            </div>
+
+            <div class="container">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show mt-3"
+                    role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+
+    {% block scripts %}
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const menuToggle = document.getElementById("menu-toggle");
+            const sidebar = document.getElementById("sidebar");
+            const pageContent = document.getElementById("page-content");
+            let icon = menuToggle.querySelector("i");
+
+            function toggleSidebar() {
+                sidebar.classList.toggle("hidden");
+                pageContent.classList.toggle("expanded");
+
+                // Cambiar el ícono de la flecha
+                if (sidebar.classList.contains("hidden")) {
+                    icon.classList.remove("fa-arrow-left");
+                    icon.classList.add("fa-arrow-right");
+                } else {
+                    icon.classList.remove("fa-arrow-right");
+                    icon.classList.add("fa-arrow-left");
+                }
+            }
+
+            menuToggle.addEventListener("click", function () {
+                toggleSidebar();
+                localStorage.setItem("sidebarState", sidebar.classList.contains("hidden") ? "hidden" : "visible");
+            });
+
+            // Mantener el estado del sidebar al cambiar de página
+            if (localStorage.getItem("sidebarState") === "hidden") {
+                sidebar.classList.add("hidden");
+                pageContent.classList.add("expanded");
+                icon.classList.remove("fa-arrow-left");
+                icon.classList.add("fa-arrow-right");
+            }
+        });
+
+        function getCsrfToken() {
+            return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+        }
+
+        function eliminarProducto(productoId) {
+            if (!confirm("¿Estás seguro de que deseas eliminar este producto?")) {
+                return;
+            }
+
+            fetch(`/producto/eliminar/${productoId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al eliminar el producto:', error);
+                    alert('Ocurrió un error al intentar eliminar el producto.');
+                });
+        }
+
+        function toggleListo(productoId) {
+            const checkbox = document.getElementById(`switch-${productoId}`);
+            if (checkbox.disabled) return;
+
+            const estadoListo = checkbox.checked;
+
+            fetch(`/producto/toggle_listo/${productoId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify({ listo: estadoListo }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const categoriaTd = document.getElementById(`categoria-${productoId}`);
+                        if (categoriaTd) {
+                            let categoriaColor = "bg-secondary"; // Color por defecto (gris)
+                            if (data.categoria === "Realizados") {
+                                categoriaColor = "bg-success"; // ✅ Verde si es "Realizados"
+                            } else if (data.categoria === "Faltantes") {
+                                categoriaColor = "bg-danger"; // ✅ Rojo si es "Faltantes"
+                            }
+                            categoriaTd.innerHTML = `<span class="badge ${categoriaColor}">${data.categoria}</span>`;
+                        }
+                    } else {
+                        alert('Hubo un error al actualizar el estado.');
+                        checkbox.checked = !estadoListo;  // Revierte el cambio si hay error
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    checkbox.checked = !estadoListo;  // Revierte el cambio si hay error
+                });
+        }
+
+        function aplicarFiltro(campo, valor) {
+            let url = new URL(window.location.href);
+            url.searchParams.set(campo, valor);  // Agrega o actualiza el filtro
+            url.searchParams.set('page', 1);  // Reinicia la paginación para evitar errores
+            window.location.href = url.toString();  // Redirige con los nuevos filtros
+        }
+
+        function actualizarNotificaciones() {
+            fetch("{% url 'obtener_notificaciones' %}")
+                .then(response => response.json())
+                .then(data => {
+                    let contador = document.getElementById("contadorNotificaciones");
+                    let lista = document.getElementById("listaNotificaciones");
+
+                    // Actualizar contador de notificaciones no leídas
+                    contador.style.display = data.total_no_leidas > 0 ? "inline-block" : "none";
+                    contador.textContent = data.total_no_leidas;
+
+                    // Limpiar lista de notificaciones
+                    lista.innerHTML = data.notificaciones.length > 0 ?
+                        data.notificaciones.map(n => `
+                            <div class="border-bottom py-2 ${n.leido ? "text-muted" : "fw-bold text-dark"}" id="notificacion-${n.id}">
+                                <small class="d-block text-secondary">${n.fecha}</small>
+                                <p class="mb-1 d-inline">${n.mensaje}</p>
+                                <button class="btn btn-sm btn-danger float-end" onclick="eliminarNotificacion(${n.id})">🗑️</button>
+                            </div>`).join('') + `
+                            <div class="text-center mt-3">
+                                <button id="eliminarTodasBtn" class="btn btn-sm btn-danger w-100" onclick="eliminarTodasNotificaciones()">🗑️ Eliminar todas</button>
+                            </div>` :
+                        '<p class="text-muted text-center">📭 No tienes nuevas notificaciones</p>';
+                })
+                .catch(error => console.error("Error obteniendo notificaciones:", error));
+        }
+
+        function eliminarNotificacion(notificacionId) {
+            fetch(`/notificaciones/eliminar/${notificacionId}/`, {
+                method: "DELETE",
+                headers: { "X-CSRFToken": getCsrfToken() }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById(`notificacion-${notificacionId}`).remove();
+                        actualizarNotificaciones(); // Actualizar la lista después de eliminar
+                    } else {
+                        alert("Error al eliminar la notificación.");
+                    }
+                });
+        }
+
+        function eliminarTodasNotificaciones() {
+            if (!confirm("¿Estás seguro de que deseas eliminar todas las notificaciones?")) return;
+
+            fetch(`/notificaciones/eliminar_todas/`, {
+                method: "DELETE",
+                headers: { "X-CSRFToken": getCsrfToken() }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById("listaNotificaciones").innerHTML = '<p class="text-muted text-center">📭 No tienes nuevas notificaciones</p>';
+                        actualizarNotificaciones();
+                    } else {
+                        alert("Error al eliminar todas las notificaciones.");
+                    }
+                });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            inicializarPerfil();
+            inicializarNotificaciones();
+        });
+        function inicializarPerfil() {
+            const userBtn = document.getElementById("userBtn");
+            const userMenu = document.getElementById("userMenu");
+
+            if (!userBtn || !userMenu) {
+                console.warn("No se encontraron los elementos del menú de usuario.");
+                return;
+            }
+
+            // Mostrar/Ocultar menú al hacer clic en el icono de usuario
+            userBtn.addEventListener("click", function (event) {
+                event.stopPropagation();  // Evita que el clic cierre el menú inmediatamente
+                userMenu.classList.toggle("d-none");
+            });
+
+            // Cerrar menú si se hace clic fuera de él
+            document.addEventListener("click", function (event) {
+                if (!userMenu.contains(event.target) && event.target !== userBtn) {
+                    userMenu.classList.add("d-none");
+                }
+            });
+        }
+
+
+        function inicializarNotificaciones() {
+            document.getElementById("notificacionesBtn").addEventListener("click", function (event) {
+                let dropdown = document.getElementById("notificacionesDropdown");
+                dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+                event.stopPropagation();
+            });
+
+            document.addEventListener("click", function (event) {
+                let dropdown = document.getElementById("notificacionesDropdown");
+                let btn = document.getElementById("notificacionesBtn");
+                if (!btn.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.style.display = "none";
+                }
+            });
+
+            // Recargar notificaciones cada 5 segundos
+            setInterval(actualizarNotificaciones, 5000);
+            actualizarNotificaciones();
+        }
+
+        $(document).ready(function () {
+            $("#sku, #editarSku").on("input", function () {
+                var sku = $(this).val().trim();
+                if (sku.length > 2) { // Para evitar consultas con muy pocos caracteres
+                    $.ajax({
+                        url: "{% url 'obtener_descripcion_sku' %}",
+                        type: "POST",
+                        data: {
+                            "sku": sku,
+                            "csrfmiddlewaretoken": "{{ csrf_token }}"
+                        },
+                        success: function (response) {
+                            const target = $(this).is("#sku") ? "#descripcion" : "#editarDescripcion";
+                            $(target).val(response.descripcion || "No encontrado");
+                        },
+                        error: function () {
+                            console.error("Error al obtener la descripción.");
+                        }
+                    });
+                }
+            });
+
+            // Rellenar datos del modal de edición cuando se abre
+            $('#editarProductoModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); // Botón que activó el modal
+                $("#editarId").val(button.data('id'));
+                $("#editarSku").val(button.data('sku'));
+                $("#editarDescripcion").val(button.data('descripcion'));
+                $("#editarPrecioCompra").val(button.data('precio'));
+                $("#editarProveedor").val(button.data('proveedor'));
+                $("#editarNota").val(button.data('nota'));
+                if (button.data('importancia')) {
+                    $("#editarEstrella" + button.data('importancia')).prop("checked", true);
+                }
+            });
+        });
+        document.addEventListener("DOMContentLoaded", function () {
+            const listoCheckbox = document.getElementById("editarListo");
+            const categoriaSelect = document.getElementById("editarCategoria");
+
+            // Función para bloquear la categoría si "listo" está activado
+            function actualizarCategoria() {
+                if (listoCheckbox.checked) {
+                    categoriaSelect.value = "realizado"; // Cambia la categoría
+                    categoriaSelect.setAttribute("disabled", "true"); // Bloquea el campo
+                } else {
+                    categoriaSelect.removeAttribute("disabled"); // Permite edición
+                }
+            }
+
+            // Ejecutar cuando se cambia el checkbox
+            listoCheckbox.addEventListener("change", actualizarCategoria);
+
+            // Ejecutar cuando se abre el modal
+            document.querySelectorAll("[data-bs-target='#editarProductoModal']").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    // Obtener el estado del toggle desde los atributos data
+                    const listoEstado = this.getAttribute("data-listo") === "True";
+                    listoCheckbox.checked = listoEstado;
+                    actualizarCategoria(); // Aplicar lógica al abrir modal
+                });
+            });
+        });
+        document.addEventListener("DOMContentLoaded", function () {
+            const userBtn = document.getElementById("userBtn");
+            const userMenu = document.getElementById("userMenu");
+        
+            if (!userBtn || !userMenu) {
+                console.warn("No se encontraron los elementos del menú de usuario.");
+                return;
+            }
+        
+            // Mostrar/Ocultar menú al hacer clic en el icono de usuario
+            userBtn.addEventListener("click", function (event) {
+                event.stopPropagation();  // Evita que el clic cierre el menú inmediatamente
+                userMenu.classList.toggle("d-none");
+            });
+        
+            // Cerrar menú si se hace clic fuera de él
+            document.addEventListener("click", function (event) {
+                if (!userMenu.contains(event.target) && event.target !== userBtn) {
+                    userMenu.classList.add("d-none");
+                }
+            });
+        });
+
+    </script>
+
+    {% endblock %}
+
+</body>
+
+</html>

@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Categorías{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">📂 Lista de Categorías</h2>
+
+    <div class="d-flex gap-2">
+        <form method="GET" action="{% url 'lista_categorias' %}" class="d-flex gap-2">
+            <!-- 🔍 Campo de búsqueda -->
+            <input type="text" name="q" class="form-control w-auto" placeholder="Buscar categoría"
+                value="{{ request.GET.q }}">
+
+            <!-- 🔄 Botón de Refresh -->
+            <button class="btn btn-secondary" type="button" onclick="location.href='{% url 'lista_categorias' %}'">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            {% if request.user.is_superuser %}
+            <!-- ➕ Botón para agregar categoría -->
+            <button type="button" id="abrirModalBtn" class="btn btn-success">
+                Agregar categoría
+            </button>
+            {% endif %}
+
+        </form>
+
+    </div>
+
+    <table class="table table-striped table-bordered mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>📌 Nombre</th>
+                <th>⚙️ Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for categoria in categorias %}
+            <tr data-fila-id="{{ categoria.id }}">
+                <td class="nombre-categoria">{{ categoria.nombre }}</td>
+                <td>
+                    {% if request.user.is_superuser %}
+                    <!-- Botón Editar -->
+                    <button class="btn btn-warning editar-btn" data-id="{{ categoria.id }}"
+                        data-nombre="{{ categoria.nombre }}" data-bs-toggle="modal"
+                        data-bs-target="#editarCategoriaModal">
+                        ✏️ Editar
+                    </button>
+
+                    <!-- Botón Eliminar -->
+                    <button class="btn btn-danger eliminar-btn" data-id="{{ categoria.id }}"
+                        data-nombre="{{ categoria.nombre }}" data-bs-toggle="modal"
+                        data-bs-target="#eliminarCategoriaModal">
+                        🗑️ Eliminar
+                    </button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center text-danger">
+                    🚨 No se encontraron categorías con ese nombre.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <!-- FORMULARIO PARA AGREGAR CATEGORÍA -->
+    <div class="modal fade" id="agregarCategoriaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">➕ Agregar Categoría</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{% url 'agregar_categoria' %}" method="post">
+                        {% csrf_token %}
+                        <label><strong>Nombre:</strong></label>
+                        <input type="text" name="nombre" id="nombre_categoria" class="form-control" required>
+                        <br>
+                        <button type="submit" class="btn btn-primary w-100 shadow">Guardar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="editarCategoriaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">✏️ Editar Categoría</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="editarCategoriaMensaje"></div> <!-- Contenedor para mensajes -->
+                    <form id="editarCategoriaForm" method="post" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="id" id="edit_categoria_id">
+                        <label><strong>Nombre:</strong></label>
+                        <input type="text" name="nombre" class="form-control" id="edit_categoria_nombre" required>
+                        <br>
+                        <button type="submit" class="btn btn-success w-100 shadow">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación para Eliminar -->
+    <div class="modal fade" id="eliminarCategoriaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">🗑️ Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar la categoría <strong
+                            id="nombre_categoria_eliminar"></strong>?</p>
+                    <input type="hidden" id="categoria_id_eliminar">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmarEliminarBtn">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endblock %}
+
+    {% block scripts %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 👉 Abrir el modal de agregar categoría
+            document.getElementById('abrirModalBtn')?.addEventListener('click', function () {
+                let modal = new bootstrap.Modal(document.getElementById('agregarCategoriaModal'));
+                modal.show();
+            });
+
+            // 👉 Abrir el modal de edición y cargar los datos
+            document.querySelectorAll('.editar-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    let categoriaId = this.getAttribute('data-id');
+                    let categoriaNombre = this.getAttribute('data-nombre');
+
+                    // Asignar valores a los inputs del formulario de edición
+                    document.getElementById('edit_categoria_id').value = categoriaId;
+                    document.getElementById('edit_categoria_nombre').value = categoriaNombre;
+
+                    // Actualizar la URL del formulario dinámicamente
+                    document.getElementById('editarCategoriaForm').action = `/editar_categoria/${categoriaId}/`;
+                });
+            });
+
+            // 👉 Enviar el formulario de edición por AJAX
+            document.getElementById('editarCategoriaForm')?.addEventListener('submit', function (e) {
+                e.preventDefault();  // Evita la recarga de la página
+
+                let formData = new FormData(this);
+                let categoriaId = document.getElementById('edit_categoria_id').value;
+                let mensajeDiv = document.getElementById('editarCategoriaMensaje');
+
+                fetch(`/editar_categoria/${categoriaId}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: formData
+                })
+                    .then(response => response.json())  // Asegura que la respuesta es JSON
+                    .then(data => {
+                        if (data.mensaje) {
+                            mensajeDiv.innerHTML = `<div class="alert alert-success">✅ ${data.mensaje}</div>`;
+
+                            // **Actualizar la categoría en la tabla sin recargar**
+                            let categoriaFila = document.querySelector(`[data-fila-id="${categoriaId}"]`);
+                            if (categoriaFila) {
+                                categoriaFila.querySelector('.nombre-categoria').textContent = formData.get('nombre');
+                            }
+
+                            // Cerrar el modal de edición
+                            setTimeout(() => {
+                                let modal = new bootstrap.Modal(document.getElementById('editarCategoriaModal'));
+                                modal.hide();
+                            }, 1500);
+                        } else {
+                            mensajeDiv.innerHTML = `<div class="alert alert-danger">❌ ${data.error}</div>`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        mensajeDiv.innerHTML = `<div class="alert alert-danger">❌ Error al procesar la solicitud.</div>`;
+                    });
+            });
+
+            // 👉 Configurar el modal de eliminación
+            let eliminarCategoriaModal = new bootstrap.Modal(document.getElementById('eliminarCategoriaModal'));
+
+            // Abrir el modal de eliminación y cargar datos
+            document.querySelectorAll('.eliminar-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    let categoriaId = this.getAttribute('data-id');
+                    let categoriaNombre = this.getAttribute('data-nombre');
+
+                    document.getElementById('categoria_id_eliminar').value = categoriaId;
+                    document.getElementById('nombre_categoria_eliminar').textContent = categoriaNombre;
+                });
+            });
+
+            // Confirmar eliminación
+            document.getElementById('confirmarEliminarBtn')?.addEventListener('click', function () {
+                let categoriaId = document.getElementById('categoria_id_eliminar').value;
+
+                fetch(`/eliminar_categoria/${categoriaId}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.mensaje) {
+                            // Cerrar el modal
+                            eliminarCategoriaModal.hide();
+
+                            // Eliminar la fila de la tabla sin recargar la página
+                            document.querySelector(`[data-fila-id="${categoriaId}"]`)?.remove();
+
+                            // Mostrar un mensaje de éxito
+                            alert("✅ " + data.mensaje);
+                        } else {
+                            alert("❌ " + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert("❌ Error al eliminar la categoría.");
+                    });
+            });
+
+        });
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("Recargando script de menu-toggle en categorías");
+            const menuToggle = document.getElementById("menu-toggle");
+            const sidebar = document.getElementById("sidebar");
+            const pageContent = document.getElementById("page-content");
+
+            menuToggle.addEventListener("click", function () {
+                sidebar.classList.toggle("hidden");
+                pageContent.classList.toggle("expanded");
+
+                let icon = menuToggle.querySelector("i");
+                if (sidebar.classList.contains("hidden")) {
+                    menuToggle.style.left = "10px";
+                    icon.classList.remove("fa-arrow-left");
+                    icon.classList.add("fa-arrow-right");
+                } else {
+                    menuToggle.style.left = "260px";
+                    icon.classList.remove("fa-arrow-right");
+                    icon.classList.add("fa-arrow-left");
+                }
+            });
+        });
+    </script>
+    {% endblock %}

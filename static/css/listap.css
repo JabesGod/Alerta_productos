@@ -1,0 +1,345 @@
+
+
+.toggleContainer {
+    --width: 50px;
+    --radius: 30px;
+    position: relative;
+    width: var(--width);
+    height: var(--radius);
+    background: lightgray;
+    border-radius: var(--radius);
+}
+
+.toggle {
+    position: absolute;
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+.toggle+.switch {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: var(--radius);
+    height: var(--radius);
+    cursor: pointer;
+    background: red;
+    border-radius: var(--radius);
+    transition: width 0.1s;
+}
+
+.toggle+.switch:before {
+    content: "";
+    position: absolute;
+    width: var(--radius);
+    height: var(--radius);
+    top: 50%;
+    transform: translateY(-50%);
+    background: #ffffff;
+    border-radius: 50%;
+    margin: 0px 2px;
+    left: calc(100% - var(--radius));
+    cursor: pointer;
+}
+
+body {
+    background-color: #e8f5e9;
+}
+
+.btn-primary {
+    background-color: #4caf50;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #45a049;
+}
+
+.btn-danger:hover {
+    background-color: #d32f2f;
+}
+
+.table thead th {
+    cursor: pointer;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    font-size: 2rem;
+    color: #fff;
+    cursor: pointer;
+}
+
+.star-rating input:checked~label {
+    color: black;
+}
+
+.rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+}
+
+.rating input {
+    display: none;
+}
+
+.rating label {
+    font-size: 3rem;
+    color: black;
+    cursor: pointer;
+
+}
+
+.rating input:checked~label,
+.rating label:hover,
+.rating label:hover~label {
+    color: #ffd700;
+
+}
+
+.toggleContainer {
+    --width: 50px;
+    --radius: 30px;
+    position: relative;
+    width: var(--width);
+    height: var(--radius);
+    background: lightgray;
+    border-radius: var(--radius);
+}
+
+.toggle {
+    position: absolute;
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+.toggle+.switch {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: var(--radius);
+    height: var(--radius);
+    cursor: pointer;
+    background: red;
+    border-radius: var(--radius);
+    transition: width 0.1s;
+}
+
+.toggle+.switch:before {
+    content: "";
+    position: absolute;
+    width: var(--radius);
+    height: var(--radius);
+    top: 50%;
+    transform: translateY(-50%);
+    background: #ffffff;
+    border-radius: 50%;
+    margin: 0px 2px;
+    left: calc(100% - var(--radius));
+    cursor: pointer;
+}
+
+.toggle:checked+.switch {
+    width: var(--width);
+    background: rgb(0, 196, 0);
+}
+
+
+.bg-realizados {
+    background-color: rgb(0, 196, 0) !important;
+    /* Verde personalizado */
+    color: white !important;
+    /* Texto en blanco para contraste */
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.bg-agot {
+    background-color: rgb(255, 166, 0);
+}
+
+/* 🟢 Asegura que la tabla no se expanda más allá del container */
+.container {
+    max-width: 1200px;
+    /* Puedes ajustarlo según tu diseño */
+    margin: auto;
+}
+
+.toggle:checked+.switch {
+    width: var(--width);
+    background: rgb(0, 196, 0);
+}
+
+
+/* Estilo base del sidebar */
+.sidebar {
+    width: 250px; /* Ancho por defecto */
+    height: 100vh;
+    background: #2e7d32;
+    position: fixed;
+    top: 0;
+    left: 0;
+    transition: transform 0.3s ease;
+    z-index: 1000;
+}
+/* Ocultar el sidebar cuando tiene la clase hidden */
+.sidebar.hidden {
+    transform: translateX(-100%);
+}
+
+/* Estilo del botón de toggle */
+.toggle-btn {
+    background: #43a047;
+    color: white;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    position: fixed;
+    top: 15px;
+    left: 10px;
+    z-index: 1001;
+}
+
+/* Mover el botón cuando el sidebar está oculto */
+.toggle-btn.collapsed {
+    left: 10px;
+}
+
+#page-content {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+    transition: margin-left 0.3s ease;
+}
+
+/* Expandir el contenido principal cuando el sidebar está oculto */
+#page-content.expanded {
+    margin-left: 0;
+}
+
+/* Estilos adicionales para el sidebar */
+.sidebar h3 {
+    font-size: 1.5rem;
+    color: white;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.sidebar ul {
+    padding-left: 0;
+}
+
+.sidebar .list-group-item {
+    background: transparent;
+    border: none;
+    padding: 15px 20px;
+    font-size: 18px;
+}
+
+.sidebar .list-group-item a {
+    color: white;
+    text-decoration: none;
+    display: block;
+    transition: 0.3s;
+}
+
+.sidebar .list-group-item a:hover {
+    background: #43a047;
+    /* Verde más claro */
+    border-radius: 5px;
+    padding-left: 15px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        width: 200px;
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 768px) {
+    #page-content {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+/* Hacer la tabla responsiva */
+.table-responsive {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Mantiene la tabla bien estructurada */
+.table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: auto; /* Permite que las columnas se ajusten */
+}
+
+.table th,
+.table td {
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 50px;
+    padding: 5px;
+
+}
+
+
+
+/* 🎯 Ajustar EXCLUSIVAMENTE la columna "Descripción" */
+.table th:nth-child(2),
+.table td:nth-child(2) {
+    width: 200px;  /* Define un ancho fijo */
+    max-width: 200px; /* Evita que se expanda más */
+    white-space: nowrap; /* Evita que el texto se expanda en múltiples líneas */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Muestra '...' cuando el texto es muy largo */
+}
+
+/* Opcional: Mostrar descripción completa en un tooltip al pasar el mouse */
+.table td:nth-child(2):hover {
+    overflow: visible;
+    white-space: normal;
+    word-wrap: break-word;
+    position: relative;
+    z-index: 1000;
+    background-color: #fff;
+    padding: 10px;
+}
+
+.nota-col{
+    width: 100px;  /* Define un ancho fijo */
+    max-width: 100px; /* Evita que se expanda más */
+    white-space: nowrap; /* Evita que el texto se expanda en múltiples líneas */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Muestra '...' cuando el texto es muy largo */
+    overflow: visible;
+
+}
+
+
+.nota-col:hover {
+    overflow: visible;
+    white-space: normal;
+    word-wrap: break-word;
+    position: relative;
+    z-index: 1000;
+    background-color: #fff;
+    padding: 10px;
+}
